@@ -1,0 +1,63 @@
+{
+  "tabs": {
+    "trips": "Voyages",
+    "explore": "Explorer",
+    "profile": "Profil"
+  },
+  "dashboard": {
+    "title": "Vos Voyages",
+    "subtitle": "Planifiez votre prochaine aventure",
+    "create_trip": "Créer un Voyage",
+    "no_trips": "Pas encore de voyages",
+    "no_trips_subtitle": "Créez votre premier voyage pour commencer!",
+    "destination": "Destination",
+    "budget": "Budget",
+    "dates": "Dates",
+    "days_remaining": "jours restants",
+    "members": "voyageurs"
+  },
+  "create_trip": {
+    "title": "Nouveau Voyage",
+    "step_destination": "Destination",
+    "step_dates": "Dates",
+    "step_budget": "Budget",
+    "step_preferences": "Préférences",
+    "title_placeholder": "Nom du Voyage",
+    "destination_placeholder": "Où allez-vous?",
+    "start_date": "Date de Début",
+    "end_date": "Date de Fin",
+    "budget_placeholder": "Budget Total ($)",
+    "description_placeholder": "Description (optionnel)",
+    "button_create": "Créer le Voyage",
+    "button_next": "Suivant",
+    "button_back": "Retour",
+    "creating": "Création..."
+  },
+  "trip_detail": {
+    "title": "Détails du Voyage",
+    "days_remaining": "jours restants",
+    "view_itinerary": "Voir l'Itinéraire",
+    "view_budget": "Suivi du Budget",
+    "view_reservations": "Réservations",
+    "invite_members": "Inviter des Membres",
+    "generate_itinerary": "Générer l'Itinéraire",
+    "edit_trip": "Modifier le Voyage",
+    "delete_trip": "Supprimer le Voyage"
+  },
+  "preferences": {
+    "title": "Préférences de Voyage",
+    "interests": "Intérêts",
+    "pace": "Rythme de Voyage",
+    "pace_relaxed": "Détendu",
+    "pace_moderate": "Modéré",
+    "pace_fast": "Intense",
+    "cultural": "Culturel",
+    "food": "Gastronomie",
+    "nature": "Nature",
+    "nightlife": "Vie Nocturne",
+    "adventure": "Aventure",
+    "shopping": "Shopping",
+    "history": "Histoire",
+    "art": "Art et Musées"
+  }
+}

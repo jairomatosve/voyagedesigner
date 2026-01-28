@@ -1,0 +1,22 @@
+{
+  "app_name": "TravelOrchestrator",
+  "tagline": "Planeje Inteligente, Viaje Melhor",
+  "loading": "Carregando...",
+  "error": "Erro",
+  "success": "Sucesso",
+  "cancel": "Cancelar",
+  "save": "Salvar",
+  "delete": "Excluir",
+  "edit": "Editar",
+  "close": "Fechar",
+  "yes": "Sim",
+  "no": "Não",
+  "language": "Idioma",
+  "retry": "Tentar novamente",
+  "back": "Voltar",
+  "next": "Próximo",
+  "done": "Concluído",
+  "settings": "Configurações",
+  "profile": "Perfil",
+  "logout": "Sair"
+}

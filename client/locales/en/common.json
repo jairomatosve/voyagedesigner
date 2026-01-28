@@ -1,0 +1,22 @@
+{
+  "app_name": "TravelOrchestrator",
+  "tagline": "Plan Smart, Travel Better",
+  "loading": "Loading...",
+  "error": "Error",
+  "success": "Success",
+  "cancel": "Cancel",
+  "save": "Save",
+  "delete": "Delete",
+  "edit": "Edit",
+  "close": "Close",
+  "yes": "Yes",
+  "no": "No",
+  "language": "Language",
+  "retry": "Retry",
+  "back": "Back",
+  "next": "Next",
+  "done": "Done",
+  "settings": "Settings",
+  "profile": "Profile",
+  "logout": "Logout"
+}

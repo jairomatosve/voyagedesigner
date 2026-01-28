@@ -1,0 +1,63 @@
+{
+  "tabs": {
+    "trips": "Viagens",
+    "explore": "Explorar",
+    "profile": "Perfil"
+  },
+  "dashboard": {
+    "title": "Suas Viagens",
+    "subtitle": "Planeje sua próxima aventura",
+    "create_trip": "Criar Viagem",
+    "no_trips": "Sem viagens ainda",
+    "no_trips_subtitle": "Crie sua primeira viagem para começar!",
+    "destination": "Destino",
+    "budget": "Orçamento",
+    "dates": "Datas",
+    "days_remaining": "dias restantes",
+    "members": "viajantes"
+  },
+  "create_trip": {
+    "title": "Nova Viagem",
+    "step_destination": "Destino",
+    "step_dates": "Datas",
+    "step_budget": "Orçamento",
+    "step_preferences": "Preferências",
+    "title_placeholder": "Nome da Viagem",
+    "destination_placeholder": "Para onde você vai?",
+    "start_date": "Data de Início",
+    "end_date": "Data de Término",
+    "budget_placeholder": "Orçamento Total ($)",
+    "description_placeholder": "Descrição (opcional)",
+    "button_create": "Criar Viagem",
+    "button_next": "Próximo",
+    "button_back": "Voltar",
+    "creating": "Criando..."
+  },
+  "trip_detail": {
+    "title": "Detalhes da Viagem",
+    "days_remaining": "dias restantes",
+    "view_itinerary": "Ver Itinerário",
+    "view_budget": "Controle de Gastos",
+    "view_reservations": "Reservas",
+    "invite_members": "Convidar Membros",
+    "generate_itinerary": "Gerar Itinerário",
+    "edit_trip": "Editar Viagem",
+    "delete_trip": "Excluir Viagem"
+  },
+  "preferences": {
+    "title": "Preferências de Viagem",
+    "interests": "Interesses",
+    "pace": "Ritmo de Viagem",
+    "pace_relaxed": "Relaxado",
+    "pace_moderate": "Moderado",
+    "pace_fast": "Acelerado",
+    "cultural": "Cultural",
+    "food": "Gastronomia",
+    "nature": "Natureza",
+    "nightlife": "Vida Noturna",
+    "adventure": "Aventura",
+    "shopping": "Compras",
+    "history": "História",
+    "art": "Arte e Museus"
+  }
+}

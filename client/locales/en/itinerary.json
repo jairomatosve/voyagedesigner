@@ -1,0 +1,57 @@
+{
+  "generator": {
+    "title": "Generate Itinerary",
+    "subtitle": "Let AI plan your perfect trip",
+    "button": "Generate with AI",
+    "generating": "Generating your itinerary...",
+    "regenerate": "Regenerate"
+  },
+  "viewer": {
+    "title": "Your Itinerary",
+    "no_itinerary": "No itinerary yet",
+    "no_itinerary_subtitle": "Generate an itinerary to see it here",
+    "day": "Day"
+  },
+  "activity": {
+    "status_planned": "Planned",
+    "status_ongoing": "In Progress",
+    "status_completed": "Completed",
+    "status_skipped": "Skipped",
+    "estimated_cost": "Cost",
+    "duration": "Duration",
+    "minutes": "min",
+    "mark_complete": "Mark Complete",
+    "mark_skipped": "Skip Activity"
+  },
+  "reoptimizer": {
+    "title": "Reoptimize",
+    "subtitle": "Get AI suggestions",
+    "button": "Get Suggestions",
+    "getting": "Analyzing your trip...",
+    "no_suggestions": "Mark an activity as skipped to get suggestions",
+    "accept": "Accept",
+    "decline": "Decline",
+    "suggestion": "AI Suggestion",
+    "impact": "Budget Impact"
+  },
+  "budget": {
+    "title": "Budget Tracker",
+    "total_budget": "Total Budget",
+    "spent": "Spent",
+    "remaining": "Remaining",
+    "add_expense": "Add Expense",
+    "no_expenses": "No expenses yet",
+    "no_expenses_subtitle": "Start tracking your spending",
+    "category": "Category",
+    "amount": "Amount",
+    "description": "Description",
+    "categories": {
+      "accommodation": "Accommodation",
+      "food": "Food & Dining",
+      "transport": "Transport",
+      "activities": "Activities",
+      "shopping": "Shopping",
+      "other": "Other"
+    }
+  }
+}

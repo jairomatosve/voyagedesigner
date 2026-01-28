@@ -1,0 +1,57 @@
+{
+  "generator": {
+    "title": "Gerar Itinerário",
+    "subtitle": "Deixe a IA planejar sua viagem perfeita",
+    "button": "Gerar com IA",
+    "generating": "Gerando seu itinerário...",
+    "regenerate": "Regenerar"
+  },
+  "viewer": {
+    "title": "Seu Itinerário",
+    "no_itinerary": "Sem itinerário ainda",
+    "no_itinerary_subtitle": "Gere um itinerário para vê-lo aqui",
+    "day": "Dia"
+  },
+  "activity": {
+    "status_planned": "Planejado",
+    "status_ongoing": "Em Andamento",
+    "status_completed": "Concluído",
+    "status_skipped": "Pulado",
+    "estimated_cost": "Custo",
+    "duration": "Duração",
+    "minutes": "min",
+    "mark_complete": "Marcar Concluído",
+    "mark_skipped": "Pular Atividade"
+  },
+  "reoptimizer": {
+    "title": "Reotimizar",
+    "subtitle": "Obter sugestões de IA",
+    "button": "Obter Sugestões",
+    "getting": "Analisando sua viagem...",
+    "no_suggestions": "Marque uma atividade como pulada para obter sugestões",
+    "accept": "Aceitar",
+    "decline": "Recusar",
+    "suggestion": "Sugestão de IA",
+    "impact": "Impacto no Orçamento"
+  },
+  "budget": {
+    "title": "Controle de Gastos",
+    "total_budget": "Orçamento Total",
+    "spent": "Gasto",
+    "remaining": "Restante",
+    "add_expense": "Adicionar Gasto",
+    "no_expenses": "Sem gastos ainda",
+    "no_expenses_subtitle": "Comece a registrar seus gastos",
+    "category": "Categoria",
+    "amount": "Valor",
+    "description": "Descrição",
+    "categories": {
+      "accommodation": "Hospedagem",
+      "food": "Alimentação",
+      "transport": "Transporte",
+      "activities": "Atividades",
+      "shopping": "Compras",
+      "other": "Outro"
+    }
+  }
+}

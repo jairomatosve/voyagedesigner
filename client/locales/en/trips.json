@@ -1,0 +1,63 @@
+{
+  "tabs": {
+    "trips": "Trips",
+    "explore": "Explore",
+    "profile": "Profile"
+  },
+  "dashboard": {
+    "title": "Your Trips",
+    "subtitle": "Plan your next adventure",
+    "create_trip": "Create Trip",
+    "no_trips": "No trips yet",
+    "no_trips_subtitle": "Create your first trip to get started!",
+    "destination": "Destination",
+    "budget": "Budget",
+    "dates": "Dates",
+    "days_remaining": "days left",
+    "members": "travelers"
+  },
+  "create_trip": {
+    "title": "New Trip",
+    "step_destination": "Destination",
+    "step_dates": "Dates",
+    "step_budget": "Budget",
+    "step_preferences": "Preferences",
+    "title_placeholder": "Trip Name",
+    "destination_placeholder": "Where are you going?",
+    "start_date": "Start Date",
+    "end_date": "End Date",
+    "budget_placeholder": "Total Budget ($)",
+    "description_placeholder": "Description (optional)",
+    "button_create": "Create Trip",
+    "button_next": "Next",
+    "button_back": "Back",
+    "creating": "Creating..."
+  },
+  "trip_detail": {
+    "title": "Trip Details",
+    "days_remaining": "days remaining",
+    "view_itinerary": "View Itinerary",
+    "view_budget": "Budget Tracker",
+    "view_reservations": "Reservations",
+    "invite_members": "Invite Members",
+    "generate_itinerary": "Generate Itinerary",
+    "edit_trip": "Edit Trip",
+    "delete_trip": "Delete Trip"
+  },
+  "preferences": {
+    "title": "Travel Preferences",
+    "interests": "Interests",
+    "pace": "Travel Pace",
+    "pace_relaxed": "Relaxed",
+    "pace_moderate": "Moderate",
+    "pace_fast": "Fast-paced",
+    "cultural": "Cultural",
+    "food": "Food & Dining",
+    "nature": "Nature",
+    "nightlife": "Nightlife",
+    "adventure": "Adventure",
+    "shopping": "Shopping",
+    "history": "History",
+    "art": "Art & Museums"
+  }
+}

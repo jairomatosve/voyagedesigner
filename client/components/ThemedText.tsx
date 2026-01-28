@@ -1,12 +1,21 @@
-import { Text, type TextProps } from "react-native";
+import { Text, type TextProps, Platform } from "react-native";
 
 import { useTheme } from "@/hooks/useTheme";
-import { Typography } from "@/constants/theme";
+import { Typography, Fonts } from "@/constants/theme";
 
 export type ThemedTextProps = TextProps & {
   lightColor?: string;
   darkColor?: string;
-  type?: "h1" | "h2" | "h3" | "h4" | "body" | "small" | "link";
+  type?:
+    | "display"
+    | "h1"
+    | "h2"
+    | "h3"
+    | "h4"
+    | "body"
+    | "small"
+    | "caption"
+    | "link";
 };
 
 export function ThemedText({
@@ -36,6 +45,8 @@ export function ThemedText({
 
   const getTypeStyle = () => {
     switch (type) {
+      case "display":
+        return Typography.display;
       case "h1":
         return Typography.h1;
       case "h2":
@@ -48,6 +59,8 @@ export function ThemedText({
         return Typography.body;
       case "small":
         return Typography.small;
+      case "caption":
+        return Typography.caption;
       case "link":
         return Typography.link;
       default:
@@ -55,7 +68,31 @@ export function ThemedText({
     }
   };
 
+  const getFontFamily = () => {
+    const typeStyle = getTypeStyle();
+    if (Platform.OS === "web") {
+      return Fonts?.sans;
+    }
+    if (
+      typeStyle.fontWeight === "700" ||
+      typeStyle.fontWeight === ("bold" as any)
+    ) {
+      return Fonts?.sansBold;
+    }
+    if (typeStyle.fontWeight === "600") {
+      return Fonts?.sansSemiBold;
+    }
+    return Fonts?.sans;
+  };
+
   return (
-    <Text style={[{ color: getColor() }, getTypeStyle(), style]} {...rest} />
+    <Text
+      style={[
+        { color: getColor(), fontFamily: getFontFamily() },
+        getTypeStyle(),
+        style,
+      ]}
+      {...rest}
+    />
   );
 }

@@ -1,0 +1,57 @@
+{
+  "generator": {
+    "title": "Générer l'Itinéraire",
+    "subtitle": "Laissez l'IA planifier votre voyage parfait",
+    "button": "Générer avec l'IA",
+    "generating": "Génération de votre itinéraire...",
+    "regenerate": "Régénérer"
+  },
+  "viewer": {
+    "title": "Votre Itinéraire",
+    "no_itinerary": "Pas encore d'itinéraire",
+    "no_itinerary_subtitle": "Générez un itinéraire pour le voir ici",
+    "day": "Jour"
+  },
+  "activity": {
+    "status_planned": "Planifié",
+    "status_ongoing": "En Cours",
+    "status_completed": "Terminé",
+    "status_skipped": "Ignoré",
+    "estimated_cost": "Coût",
+    "duration": "Durée",
+    "minutes": "min",
+    "mark_complete": "Marquer Terminé",
+    "mark_skipped": "Ignorer l'Activité"
+  },
+  "reoptimizer": {
+    "title": "Réoptimiser",
+    "subtitle": "Obtenir des suggestions IA",
+    "button": "Obtenir des Suggestions",
+    "getting": "Analyse de votre voyage...",
+    "no_suggestions": "Marquez une activité comme ignorée pour obtenir des suggestions",
+    "accept": "Accepter",
+    "decline": "Refuser",
+    "suggestion": "Suggestion IA",
+    "impact": "Impact sur le Budget"
+  },
+  "budget": {
+    "title": "Suivi du Budget",
+    "total_budget": "Budget Total",
+    "spent": "Dépensé",
+    "remaining": "Restant",
+    "add_expense": "Ajouter une Dépense",
+    "no_expenses": "Pas encore de dépenses",
+    "no_expenses_subtitle": "Commencez à suivre vos dépenses",
+    "category": "Catégorie",
+    "amount": "Montant",
+    "description": "Description",
+    "categories": {
+      "accommodation": "Hébergement",
+      "food": "Alimentation",
+      "transport": "Transport",
+      "activities": "Activités",
+      "shopping": "Shopping",
+      "other": "Autre"
+    }
+  }
+}

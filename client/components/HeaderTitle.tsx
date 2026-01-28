@@ -16,7 +16,7 @@ export function HeaderTitle({ title }: HeaderTitleProps) {
         style={styles.icon}
         resizeMode="contain"
       />
-      <ThemedText style={styles.title}>{title}</ThemedText>
+      <ThemedText type="h4">{title}</ThemedText>
     </View>
   );
 }
@@ -31,9 +31,5 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     marginRight: Spacing.sm,
-  },
-  title: {
-    fontSize: 17,
-    fontWeight: "600",
   },
 });
