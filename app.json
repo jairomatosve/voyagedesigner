@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "TravelOrchestrator",
-    "slug": "travelorchestrator",
+    "name": "VoyageDesigner",
+    "slug": "voyagedesigner",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "travelorchestrator",
+    "scheme": "voyagedesigner",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.travelorchestrator.app"
+      "bundleIdentifier": "com.voyagedesigner.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +19,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.travelorchestrator.app"
+      "package": "com.voyagedesigner.app"
     },
     "web": {
       "output": "single",
