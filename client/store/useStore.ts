@@ -1,18 +1,17 @@
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
+import { supabase } from "../lib/supabase";
 import type {
   User,
   Trip,
-  TripPreferences,
   Itinerary,
   Expense,
   Activity,
 } from "../types";
 
 interface AppState {
-  user: User | null;
+  user: any | null;
   isAuthenticated: boolean;
   trips: Trip[];
   currentTrip: Trip | null;
@@ -21,7 +20,7 @@ interface AppState {
   language: string;
   isLoading: boolean;
 
-  setUser: (user: User | null) => void;
+  setUser: (user: any | null) => void;
   setAuthenticated: (isAuthenticated: boolean) => void;
   setTrips: (trips: Trip[]) => void;
   addTrip: (trip: Trip) => void;
@@ -37,33 +36,10 @@ interface AppState {
   addExpense: (expense: Expense) => void;
   setLanguage: (language: string) => void;
   setLoading: (isLoading: boolean) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   initialize: () => Promise<void>;
   persistState: () => Promise<void>;
 }
-
-const secureStorage = {
-  getItem: async (key: string): Promise<string | null> => {
-    if (Platform.OS === "web") {
-      return localStorage.getItem(key);
-    }
-    return SecureStore.getItemAsync(key);
-  },
-  setItem: async (key: string, value: string): Promise<void> => {
-    if (Platform.OS === "web") {
-      localStorage.setItem(key, value);
-      return;
-    }
-    await SecureStore.setItemAsync(key, value);
-  },
-  removeItem: async (key: string): Promise<void> => {
-    if (Platform.OS === "web") {
-      localStorage.removeItem(key);
-      return;
-    }
-    await SecureStore.deleteItemAsync(key);
-  },
-};
 
 export const useStore = create<AppState>((set, get) => ({
   user: null,
@@ -73,11 +49,10 @@ export const useStore = create<AppState>((set, get) => ({
   currentItinerary: null,
   expenses: [],
   language: "en",
-  isLoading: false,
+  isLoading: true,
 
   setUser: (user) => {
     set({ user, isAuthenticated: !!user });
-    get().persistState();
   },
 
   setAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
@@ -160,10 +135,8 @@ export const useStore = create<AppState>((set, get) => ({
   setLoading: (isLoading) => set({ isLoading }),
 
   logout: async () => {
-    await secureStorage.removeItem("auth_token");
-    await AsyncStorage.removeItem("@user");
+    await supabase.auth.signOut();
     await AsyncStorage.removeItem("@trips");
-    await AsyncStorage.removeItem("@itineraries");
     await AsyncStorage.removeItem("@expenses");
     set({
       user: null,
@@ -177,37 +150,42 @@ export const useStore = create<AppState>((set, get) => ({
 
   initialize: async () => {
     try {
-      const [languageData, userData, tripsData, expensesData] =
-        await Promise.all([
-          AsyncStorage.getItem("@language"),
-          AsyncStorage.getItem("@user"),
-          AsyncStorage.getItem("@trips"),
-          AsyncStorage.getItem("@expenses"),
-        ]);
-
-      const updates: Partial<AppState> = {};
-
+      const languageData = await AsyncStorage.getItem("@language");
       if (languageData) {
-        updates.language = languageData;
+        set({ language: languageData });
       }
 
-      if (userData) {
-        const user = JSON.parse(userData);
-        updates.user = user;
-        updates.isAuthenticated = true;
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (session?.user) {
+        set({
+          user: session.user,
+          isAuthenticated: true,
+        });
       }
 
-      if (tripsData) {
-        updates.trips = JSON.parse(tripsData);
-      }
+      supabase.auth.onAuthStateChange((_event, session) => {
+        set({
+          user: session?.user ?? null,
+          isAuthenticated: !!session?.user,
+        });
+      });
 
-      if (expensesData) {
-        updates.expenses = JSON.parse(expensesData);
-      }
+      // Load cached local state
+      const [tripsData, expensesData] = await Promise.all([
+        AsyncStorage.getItem("@trips"),
+        AsyncStorage.getItem("@expenses"),
+      ]);
 
-      set(updates);
+      set({
+        trips: tripsData ? JSON.parse(tripsData) : [],
+        expenses: expensesData ? JSON.parse(expensesData) : [],
+        isLoading: false
+      });
+
     } catch (error) {
       console.error("Failed to initialize store:", error);
+      set({ isLoading: false });
     }
   },
 
@@ -215,9 +193,6 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       const state = get();
       await Promise.all([
-        state.user
-          ? AsyncStorage.setItem("@user", JSON.stringify(state.user))
-          : AsyncStorage.removeItem("@user"),
         AsyncStorage.setItem("@trips", JSON.stringify(state.trips)),
         AsyncStorage.setItem("@expenses", JSON.stringify(state.expenses)),
       ]);

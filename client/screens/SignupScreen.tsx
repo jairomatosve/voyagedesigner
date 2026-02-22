@@ -13,6 +13,7 @@ import { Button } from "@/components/Button";
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { useTheme } from "@/hooks/useTheme";
 import { useStore } from "@/store/useStore";
+import { supabase } from "@/lib/supabase";
 import { Spacing, Colors } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
@@ -72,19 +73,25 @@ export default function SignupScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      const user = {
-        id: "user-" + Date.now(),
+      const { data, error } = await supabase.auth.signUp({
         email,
-        name,
-        preferredLanguage: "en",
-      };
+        password,
+        options: {
+          data: {
+            display_name: name,
+          },
+        },
+      });
 
-      setUser(user);
-      setAuthenticated(true);
+      if (error) {
+        throw error;
+      }
+
+      // Zustand store will automatically catch the onAuthStateChange event and update
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch (error) {
+    } catch (error: any) {
+      console.error(error);
+      setErrors({ email: error.message });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setLoading(false);
