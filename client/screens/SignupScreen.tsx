@@ -73,19 +73,21 @@ export default function SignupScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
-      const { data, error } = await supabase.auth.signUp({
+      // 1. Call our custom backend endpoint to create and auto-confirm the user
+      const { apiRequest } = await import("@/lib/query-client");
+      await apiRequest("POST", "/api/auth/register", {
         email,
         password,
-        options: {
-          data: {
-            display_name: name,
-          },
-        },
+        name,
       });
 
-      if (error) {
-        throw error;
-      }
+      // 2. Now login normally to get the session locally
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) throw signInError;
 
       // Zustand store will automatically catch the onAuthStateChange event and update
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
