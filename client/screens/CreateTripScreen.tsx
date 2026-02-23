@@ -16,7 +16,6 @@ import { Button } from "@/components/Button";
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { useTheme } from "@/hooks/useTheme";
 import { useStore } from "@/store/useStore";
-import { apiRequest } from "@/lib/query-client";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import type { Trip } from "@/types";
@@ -88,24 +87,24 @@ export default function CreateTripScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
-      const tripData = {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const newTrip: Trip = {
+        id: `trip-${Date.now()}`,
         title: title || `Trip to ${destination}`,
         destination,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
-        totalBudget: parseFloat(budget) || null,
+        totalBudget: parseFloat(budget) || 0,
         currency: "USD",
         status: "planning",
+        createdAt: new Date().toISOString(),
       };
-
-      const response = await apiRequest("POST", "/api/trips", tripData);
-      const newTrip: Trip = await response.json();
 
       addTrip(newTrip);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       navigation.goBack();
     } catch (error) {
-      console.error("Failed to create trip:", error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setLoading(false);

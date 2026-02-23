@@ -6,7 +6,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { ThemedText } from "@/components/ThemedText";
 import { Input } from "@/components/Input";
@@ -14,7 +13,6 @@ import { Button } from "@/components/Button";
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { useTheme } from "@/hooks/useTheme";
 import { useStore } from "@/store/useStore";
-import { getApiUrl, setAuthToken } from "@/lib/query-client";
 import { Spacing, Colors } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
@@ -74,27 +72,19 @@ export default function SignupScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
-      const baseUrl = getApiUrl();
-      const res = await fetch(new URL("/api/auth/register", baseUrl), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, name }),
-      });
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const data = await res.json();
+      const user = {
+        id: "user-" + Date.now(),
+        email,
+        name,
+        preferredLanguage: "en",
+      };
 
-      if (!res.ok) {
-        throw new Error(data.error || "Registration failed");
-      }
-
-      await setAuthToken(data.token);
-      await AsyncStorage.setItem("@user", JSON.stringify(data.user));
-      setUser(data.user);
+      setUser(user);
       setAuthenticated(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch (error: any) {
-      console.error(error);
-      setErrors({ email: error.message });
+    } catch (error) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setLoading(false);
