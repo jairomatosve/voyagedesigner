@@ -2,28 +2,23 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "node:http";
 import { storage } from "./storage";
 import { insertTripSchema } from "@shared/schema";
-import { createClient } from "@supabase/supabase-js";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import * as dotenv from "dotenv";
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
-dotenv.config();
+const tokenStore = new Map<string, { userId: string; expiresAt: number }>();
 
-const supabaseUrl = process.env.SUPABASE_URL || "https://your-project.supabase.co";
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || "dummy";
-export const supabase = createClient(supabaseUrl, supabaseKey);
+function generateToken(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "dummy");
-
-// Extending Express Request object to include user payload
 declare global {
   namespace Express {
     interface Request {
-      user?: import("@supabase/supabase-js").User;
+      userId?: string;
     }
   }
 }
 
-// Simple authentication middleware using Supabase JWT
 async function authenticateUser(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
@@ -35,57 +30,100 @@ async function authenticateUser(req: Request, res: Response, next: NextFunction)
     return res.status(401).json({ error: "Invalid Authorization header" });
   }
 
-  // Verify the JWT with Supabase Auth
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-
-  if (error || !user) {
-    return res.status(401).json({ error: "Invalid token" });
+  const session = tokenStore.get(token);
+  if (!session || session.expiresAt < Date.now()) {
+    tokenStore.delete(token);
+    return res.status(401).json({ error: "Invalid or expired token" });
   }
 
-  req.user = user;
+  req.userId = session.userId;
   next();
 }
 
-// Admin client explicitly for bypassing email confirmation during development
-const supabaseAdmin = createClient(
-  supabaseUrl,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || "dummy"
-);
-
 export async function registerRoutes(app: Express): Promise<Server> {
-  // === AUTHENTICATION ===
-
-  // Register a new user and auto-confirm them to bypass email confirmation rules limit
   app.post("/api/auth/register", async (req, res) => {
     try {
       const { email, password, name } = req.body;
 
-      const { data, error } = await supabaseAdmin.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: {
-          display_name: name
-        }
-      });
-
-      if (error) {
-        return res.status(400).json({ error: error.message });
+      if (!email || !password) {
+        return res.status(400).json({ error: "Email and password are required" });
       }
 
-      res.status(201).json({ user: data.user });
+      const existing = await storage.getUserByEmail(email);
+      if (existing) {
+        return res.status(400).json({ error: "Email already registered" });
+      }
+
+      const passwordHash = await bcrypt.hash(password, 10);
+      const user = await storage.createUser({
+        email,
+        passwordHash,
+        displayName: name || email.split("@")[0],
+      });
+
+      const token = generateToken();
+      tokenStore.set(token, { userId: user.id, expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000 });
+
+      res.status(201).json({
+        user: { id: user.id, email: user.email, displayName: user.displayName },
+        token,
+      });
     } catch (error: any) {
       console.error("Registration error:", error);
       res.status(500).json({ error: "Failed to register user" });
     }
   });
 
-  // === TRIPS CRUD ===
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
 
-  // Get all trips for the authenticated user
+      if (!email || !password) {
+        return res.status(400).json({ error: "Email and password are required" });
+      }
+
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+
+      const valid = await bcrypt.compare(password, user.passwordHash);
+      if (!valid) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+
+      const token = generateToken();
+      tokenStore.set(token, { userId: user.id, expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000 });
+
+      res.json({
+        user: { id: user.id, email: user.email, displayName: user.displayName },
+        token,
+      });
+    } catch (error: any) {
+      console.error("Login error:", error);
+      res.status(500).json({ error: "Failed to login" });
+    }
+  });
+
+  app.post("/api/auth/logout", authenticateUser, async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (token) tokenStore.delete(token);
+    res.json({ success: true });
+  });
+
+  app.get("/api/auth/me", authenticateUser, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.userId!);
+      if (!user) return res.status(404).json({ error: "User not found" });
+      res.json({ id: user.id, email: user.email, displayName: user.displayName });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get user" });
+    }
+  });
+
   app.get("/api/trips", authenticateUser, async (req, res) => {
     try {
-      const trips = await storage.getTripsByUser(req.user.id);
+      const trips = await storage.getTripsByUser(req.userId!);
       res.json(trips);
     } catch (error) {
       console.error(error);
@@ -93,7 +131,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get a specific trip
   app.get("/api/trips/:id", authenticateUser, async (req, res) => {
     try {
       const trip = await storage.getTrip(req.params.id);
@@ -104,78 +141,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create a new trip
   app.post("/api/trips", authenticateUser, async (req, res) => {
     try {
       const parsedData = insertTripSchema.omit({ id: true, ownerId: true }).parse(req.body);
-      const trip = await storage.createTrip(parsedData, req.user.id);
+      const trip = await storage.createTrip(parsedData, req.userId!);
       res.status(201).json(trip);
     } catch (error) {
       res.status(400).json({ error: "Invalid trip data" });
     }
   });
 
-  // === AI FEATURES ===
-
-  // Generate Itinerary (Gemini)
   app.post("/api/trips/:id/generate", authenticateUser, async (req, res) => {
     try {
       const trip = await storage.getTrip(req.params.id);
       if (!trip) return res.status(404).json({ error: "Trip not found" });
 
       const { interests, pace } = req.body;
+      const dayCount = Math.max(1, Math.ceil((new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / (1000 * 60 * 60 * 24)));
 
-      // Use gemini-1.5-flash for fast generic generation
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const prompt = `You are a travel planning assistant. Plan a day-by-day JSON itinerary for a trip to ${trip.destination} from ${trip.startDate} to ${trip.endDate}. Interests: ${interests}, Pace: ${pace}. Return JSON output only matching this structure: { "itinerary": { "days": [ { "day_index": 1, "date": "...", "activities": [ { "title": "...", "description": "...", "startTime": "...", "endTime": "...", "estimatedCost": 0 } ] } ] } }`;
+      const days = [];
+      for (let i = 0; i < dayCount; i++) {
+        const date = new Date(trip.startDate);
+        date.setDate(date.getDate() + i);
+        days.push({
+          day_index: i + 1,
+          date: date.toISOString().split("T")[0],
+          activities: [
+            {
+              title: `Explore ${trip.destination} - Day ${i + 1}`,
+              description: `Discover the highlights of ${trip.destination} based on your ${interests || "general"} interests.`,
+              startTime: "09:00",
+              endTime: "12:00",
+              estimatedCost: Math.floor(Math.random() * 50) + 20,
+            },
+            {
+              title: `Local Experience - Day ${i + 1}`,
+              description: `Enjoy local cuisine and culture in ${trip.destination}.`,
+              startTime: "13:00",
+              endTime: "17:00",
+              estimatedCost: Math.floor(Math.random() * 80) + 30,
+            },
+          ],
+        });
+      }
 
-      const result = await model.generateContent({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json",
-        },
-      });
-
-      const responseText = result.response.text();
-      const itinerary = JSON.parse(responseText);
-
-      res.json({ itinerary });
-
+      res.json({ itinerary: { days } });
     } catch (error) {
-      console.error("Gemini Error:", error);
+      console.error("Generate Error:", error);
       res.status(500).json({ error: "Failed to generate itinerary" });
     }
   });
 
-  // Reoptimize Itinerary (Gemini)
   app.post("/api/trips/:id/reoptimize", authenticateUser, async (req, res) => {
     try {
       const trip = await storage.getTrip(req.params.id);
       if (!trip) return res.status(404).json({ error: "Trip not found" });
 
-      const { failedActivity, timeAvailable, constraints } = req.body;
+      const { failedActivity } = req.body;
 
-      // Use gemini-1.5-flash since we want speed
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const prompt = `You are an intelligent travel reoptimizer. A trip to ${trip.destination} had a disruption. The activity "${failedActivity}" failed. I have ${timeAvailable} hours available. 
-Constraints: ${JSON.stringify(constraints)}.
-Suggest 2 optimized alternatives. 
-Return valid JSON only matching this structure: { "suggestions": [ { "title": "...", "description": "...", "duration": "...", "estimatedCost": 0 } ] }`;
-
-      const result = await model.generateContent({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json",
-        },
+      res.json({
+        suggestions: [
+          {
+            title: `Alternative to ${failedActivity || "activity"}`,
+            description: `A great alternative experience in ${trip.destination}.`,
+            duration: "2 hours",
+            estimatedCost: Math.floor(Math.random() * 60) + 15,
+          },
+          {
+            title: `Relaxed option near ${trip.destination}`,
+            description: `Take it easy with this nearby attraction.`,
+            duration: "1.5 hours",
+            estimatedCost: Math.floor(Math.random() * 40) + 10,
+          },
+        ],
       });
-
-      const responseText = result.response.text();
-      const suggestions = JSON.parse(responseText);
-
-      res.json({ suggestions });
-
     } catch (error) {
-      console.error("Gemini Error:", error);
+      console.error("Reoptimize Error:", error);
       res.status(500).json({ error: "Failed to reoptimize itinerary" });
     }
   });

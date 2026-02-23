@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Platform } from "react-native";
-import { supabase } from "../lib/supabase";
+import { clearAuthToken, getAuthToken } from "../lib/query-client";
 import type {
   User,
   Trip,
@@ -135,9 +134,10 @@ export const useStore = create<AppState>((set, get) => ({
   setLoading: (isLoading) => set({ isLoading }),
 
   logout: async () => {
-    await supabase.auth.signOut();
+    await clearAuthToken();
     await AsyncStorage.removeItem("@trips");
     await AsyncStorage.removeItem("@expenses");
+    await AsyncStorage.removeItem("@user");
     set({
       user: null,
       isAuthenticated: false,
@@ -155,23 +155,16 @@ export const useStore = create<AppState>((set, get) => ({
         set({ language: languageData });
       }
 
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = await getAuthToken();
+      const userData = await AsyncStorage.getItem("@user");
 
-      if (session?.user) {
+      if (token && userData) {
         set({
-          user: session.user,
+          user: JSON.parse(userData),
           isAuthenticated: true,
         });
       }
 
-      supabase.auth.onAuthStateChange((_event, session) => {
-        set({
-          user: session?.user ?? null,
-          isAuthenticated: !!session?.user,
-        });
-      });
-
-      // Load cached local state
       const [tripsData, expensesData] = await Promise.all([
         AsyncStorage.getItem("@trips"),
         AsyncStorage.getItem("@expenses"),

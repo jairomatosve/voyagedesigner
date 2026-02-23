@@ -3,10 +3,10 @@ import { pgTable, text, varchar, timestamp, uuid, integer, real, serial } from "
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Users Table (Profiles linked to Supabase Auth)
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
   displayName: text("display_name"),
   avatarUrl: text("avatar_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
