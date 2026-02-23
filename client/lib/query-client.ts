@@ -5,8 +5,18 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
  * @returns {string} The API base URL
  */
 export function getApiUrl(): string {
-  // Use EXPO_PUBLIC_API_URL environment variable, fallback to localhost for web
-  return process.env.EXPO_PUBLIC_API_URL || "http://localhost:5000";
+  // Use EXPO_PUBLIC_API_URL if provided directly in .env
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+
+  // Fallback to Replit's dynamic domain if running via npm run expo:dev
+  if (process.env.EXPO_PUBLIC_DOMAIN) {
+    return `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
+  }
+
+  // Fallback to localhost if running strictly locally
+  return "http://localhost:5000";
 }
 
 import { supabase } from "./supabase";
