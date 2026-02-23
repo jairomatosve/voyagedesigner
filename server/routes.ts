@@ -46,7 +46,40 @@ async function authenticateUser(req: Request, res: Response, next: NextFunction)
   next();
 }
 
+// Admin client explicitly for bypassing email confirmation during development
+const supabaseAdmin = createClient(
+  supabaseUrl,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || "dummy"
+);
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // === AUTHENTICATION ===
+
+  // Register a new user and auto-confirm them to bypass email confirmation rules limit
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { email, password, name } = req.body;
+
+      const { data, error } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          display_name: name
+        }
+      });
+
+      if (error) {
+        return res.status(400).json({ error: error.message });
+      }
+
+      res.status(201).json({ user: data.user });
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      res.status(500).json({ error: "Failed to register user" });
+    }
+  });
+
   // === TRIPS CRUD ===
 
   // Get all trips for the authenticated user
