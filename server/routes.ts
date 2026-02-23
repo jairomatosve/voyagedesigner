@@ -8,8 +8,8 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-const supabaseUrl = process.env.SUPABASE_URL || "https://your-project.supabase.co";
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || "dummy";
+const supabaseUrl = process.env.SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL || "https://your-project.supabase.co";
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "dummy";
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "dummy");
@@ -58,6 +58,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register a new user and auto-confirm them to bypass email confirmation rules limit
   app.post("/api/auth/register", async (req, res) => {
     try {
+      // Security/Sanity Check: Ensure Backend and Frontend are pointing to the EXACT same database
+      const backendUrl = process.env.SUPABASE_URL || "";
+      const frontendUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || "";
+
+      if (backendUrl && frontendUrl && backendUrl !== frontendUrl) {
+        console.error(`FATAL MISMATCH: Backend is pointing to ${backendUrl} but Frontend is pointing to ${frontendUrl}.`);
+        return res.status(400).json({
+          error: `Database Mismatch Error! Tu servidor Backend (Secrets: SUPABASE_URL) está conectado a un proyecto diferente que tu aplicación (Secrets: EXPO_PUBLIC_SUPABASE_URL). Por favor asegúrate de que ambos apuntan al MISMO URL de Supabase exacto en los Secrets de Replit.`
+        });
+      }
+
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "dummy";
+      if (supabaseKey === "dummy" || supabaseKey.length < 20) {
+        return res.status(400).json({
+          error: `Backend Supabase Key Missing! Por favor agrega SUPABASE_SERVICE_ROLE_KEY (o SUPABASE_ANON_KEY) en los Secrets de Replit.`
+        });
+      }
+
       const { email, password, name } = req.body;
 
       const { data, error } = await supabaseAdmin.auth.admin.createUser({
