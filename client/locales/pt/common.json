@@ -18,5 +18,8 @@
   "done": "Concluído",
   "settings": "Configurações",
   "profile": "Perfil",
-  "logout": "Sair"
+  "logout": "Sair",
+  "notifications": "Notificações",
+  "privacy": "Privacidade",
+  "help_support": "Ajuda e Suporte"
 }

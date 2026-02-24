@@ -18,5 +18,8 @@
   "done": "Terminé",
   "settings": "Paramètres",
   "profile": "Profil",
-  "logout": "Déconnexion"
+  "logout": "Déconnexion",
+  "notifications": "Notifications",
+  "privacy": "Confidentialité",
+  "help_support": "Aide et Support"
 }

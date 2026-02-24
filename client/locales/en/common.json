@@ -18,5 +18,8 @@
   "done": "Done",
   "settings": "Settings",
   "profile": "Profile",
-  "logout": "Logout"
+  "logout": "Logout",
+  "notifications": "Notifications",
+  "privacy": "Privacy",
+  "help_support": "Help & Support"
 }

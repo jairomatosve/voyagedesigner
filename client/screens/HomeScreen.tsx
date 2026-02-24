@@ -16,6 +16,7 @@ import type { Trip } from "@/types";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
+import { useTranslation } from "react-i18next";
 
 export default function HomeScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -23,6 +24,7 @@ export default function HomeScreen() {
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
+  const { t } = useTranslation("trips");
 
   const { trips, setTrips } = useStore();
 
@@ -73,8 +75,8 @@ export default function HomeScreen() {
       ListEmptyComponent={
         <EmptyState
           image={require('../../assets/images/icon.png')}
-          title="No trips yet"
-          subtitle="Create your first trip to get started."
+          title={t("dashboard.no_trips")}
+          subtitle={t("dashboard.no_trips_subtitle")}
         />
       }
     />

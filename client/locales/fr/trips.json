@@ -18,20 +18,27 @@
   },
   "create_trip": {
     "title": "Nouveau Voyage",
+    "step_itinerary": "Itinéraire et Dates",
     "step_destination": "Destination",
     "step_dates": "Dates",
     "step_budget": "Budget",
     "step_preferences": "Préférences",
     "title_placeholder": "Nom du Voyage",
-    "destination_placeholder": "Où allez-vous?",
+    "title_optional": "Titre du Voyage (Optionnel)",
+    "title_placeholder_opt": "ex. Eurotrip 2024",
+    "destination_placeholder": "Où allez-vous ?",
+    "stop": "Arrêt",
+    "where_to": "Où allez-vous ?",
+    "add_stop": "Ajouter un Arrêt",
     "start_date": "Date de Début",
     "end_date": "Date de Fin",
     "budget_placeholder": "Budget Total ($)",
-    "description_placeholder": "Description (optionnel)",
+    "description_placeholder": "Description (facultatif)",
     "button_create": "Créer le Voyage",
     "button_next": "Suivant",
     "button_back": "Retour",
-    "creating": "Création..."
+    "creating": "Création...",
+    "overall_budget": "Définissez un budget global pour l'ensemble de cet itinéraire."
   },
   "trip_detail": {
     "title": "Détails du Voyage",
@@ -42,7 +49,9 @@
     "invite_members": "Inviter des Membres",
     "generate_itinerary": "Générer l'Itinéraire",
     "edit_trip": "Modifier le Voyage",
-    "delete_trip": "Supprimer le Voyage"
+    "delete_trip": "Supprimer le Voyage",
+    "quick_actions": "Actions Rapides",
+    "no_destinations": "Aucune destination"
   },
   "preferences": {
     "title": "Préférences de Voyage",

@@ -108,7 +108,7 @@ export default function TripDetailScreen() {
               <ThemedText type="body" style={styles.heroLocationText}>
                 {trip.destinations && trip.destinations.length > 0
                   ? trip.destinations.map(d => d.location).join(" → ")
-                  : "No destinations"}
+                  : t("trip_detail.no_destinations")}
               </ThemedText>
             </View>
           </Animated.View>
@@ -171,7 +171,7 @@ export default function TripDetailScreen() {
 
         <Animated.View entering={FadeInDown.delay(400).duration(400)}>
           <ThemedText type="h3" style={styles.sectionTitle}>
-            Quick Actions
+            {t("trip_detail.quick_actions")}
           </ThemedText>
 
           <View style={styles.actionsGrid}>

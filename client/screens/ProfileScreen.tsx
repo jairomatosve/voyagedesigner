@@ -168,7 +168,7 @@ export default function ProfileScreen() {
             >
               <Feather name="bell" size={20} color={Colors.accent} />
             </View>
-            <ThemedText type="body">Notifications</ThemedText>
+            <ThemedText type="body">{t("common:notifications")}</ThemedText>
           </View>
           <Feather
             name="chevron-right"
@@ -192,7 +192,7 @@ export default function ProfileScreen() {
             >
               <Feather name="shield" size={20} color={Colors.success} />
             </View>
-            <ThemedText type="body">Privacy</ThemedText>
+            <ThemedText type="body">{t("common:privacy")}</ThemedText>
           </View>
           <Feather
             name="chevron-right"
@@ -216,7 +216,7 @@ export default function ProfileScreen() {
             >
               <Feather name="help-circle" size={20} color={Colors.warning} />
             </View>
-            <ThemedText type="body">Help & Support</ThemedText>
+            <ThemedText type="body">{t("common:help_support")}</ThemedText>
           </View>
           <Feather
             name="chevron-right"

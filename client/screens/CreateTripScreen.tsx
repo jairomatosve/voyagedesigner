@@ -184,12 +184,12 @@ export default function CreateTripScreen() {
   const renderStep1 = () => (
     <View style={styles.stepContent}>
       <ThemedText type="h2" style={styles.stepTitle}>
-        Itinerary & Dates
+        {t("create_trip.step_itinerary")}
       </ThemedText>
 
       <Input
-        label="Trip Title (Optional)"
-        placeholder="e.g., Eurotrip 2024"
+        label={t("create_trip.title_optional")}
+        placeholder={t("create_trip.title_placeholder_opt")}
         value={title}
         onChangeText={setTitle}
         leftIcon="edit-3"
@@ -199,7 +199,7 @@ export default function CreateTripScreen() {
         {destinations.map((dest, index) => (
           <View key={dest.id} style={[styles.destinationCard, { backgroundColor: theme.backgroundSecondary }]}>
             <View style={styles.destHeader}>
-              <ThemedText type="h4" style={styles.destIndex}>Stop {index + 1}</ThemedText>
+              <ThemedText type="h4" style={styles.destIndex}>{t("create_trip.stop")} {index + 1}</ThemedText>
               {destinations.length > 1 && (
                 <Pressable onPress={() => removeDestination(dest.id)} style={styles.removeBtn}>
                   <Feather name="x" size={20} color={Colors.error} />
@@ -208,7 +208,7 @@ export default function CreateTripScreen() {
             </View>
 
             <Input
-              placeholder="Where to?"
+              placeholder={t("create_trip.where_to")}
               value={dest.location}
               onChangeText={(text) => updateDestination(dest.id, "location", text)}
               leftIcon="map-pin"
@@ -279,7 +279,7 @@ export default function CreateTripScreen() {
         >
           <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm }}>
             <Feather name="plus" size={18} color={theme.text} />
-            <ThemedText style={{ color: theme.text }}>Add Stop</ThemedText>
+            <ThemedText style={{ color: theme.text }}>{t("create_trip.add_stop")}</ThemedText>
           </View>
         </Button>
       </ScrollView>
@@ -294,7 +294,7 @@ export default function CreateTripScreen() {
       </ThemedText>
 
       <ThemedText type="body" style={{ color: theme.textSecondary, marginBottom: Spacing.xl }}>
-        Set an overall budget for this entire itinerary.
+        {t("create_trip.overall_budget")}
       </ThemedText>
 
       <Input

@@ -31,7 +31,13 @@
     "button_create": "Criar Viagem",
     "button_next": "Próximo",
     "button_back": "Voltar",
-    "creating": "Criando..."
+    "creating": "Criando...",
+    "step_itinerary": "Itinerário e Datas",
+    "title_optional": "Título da Viagem (Opcional)",
+    "title_placeholder_opt": "ex. Eurotrip 2024",
+    "stop": "Parada",
+    "where_to": "Para onde?",
+    "add_stop": "Adicionar Parada"
   },
   "trip_detail": {
     "title": "Detalhes da Viagem",
@@ -42,7 +48,9 @@
     "invite_members": "Convidar Membros",
     "generate_itinerary": "Gerar Itinerário",
     "edit_trip": "Editar Viagem",
-    "delete_trip": "Excluir Viagem"
+    "delete_trip": "Excluir Viagem",
+    "quick_actions": "Ações Rápidas",
+    "no_destinations": "Sem destinos"
   },
   "preferences": {
     "title": "Preferências de Viagem",

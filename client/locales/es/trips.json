@@ -18,12 +18,18 @@
   },
   "create_trip": {
     "title": "Nuevo Viaje",
+    "step_itinerary": "Itinerario y Fechas",
     "step_destination": "Destino",
     "step_dates": "Fechas",
     "step_budget": "Presupuesto",
     "step_preferences": "Preferencias",
     "title_placeholder": "Nombre del Viaje",
+    "title_optional": "Título del Viaje (Opcional)",
+    "title_placeholder_opt": "ej. Eurotrip 2024",
     "destination_placeholder": "¿A dónde vas?",
+    "stop": "Parada",
+    "where_to": "¿Hacia dónde?",
+    "add_stop": "Añadir Parada",
     "start_date": "Fecha de Inicio",
     "end_date": "Fecha de Fin",
     "budget_placeholder": "Presupuesto Total ($)",
@@ -31,7 +37,8 @@
     "button_create": "Crear Viaje",
     "button_next": "Siguiente",
     "button_back": "Atrás",
-    "creating": "Creando..."
+    "creating": "Creando...",
+    "overall_budget": "Establece un presupuesto global para todo el itinerario."
   },
   "trip_detail": {
     "title": "Detalles del Viaje",
@@ -42,7 +49,9 @@
     "invite_members": "Invitar Miembros",
     "generate_itinerary": "Generar Itinerario",
     "edit_trip": "Editar Viaje",
-    "delete_trip": "Eliminar Viaje"
+    "delete_trip": "Eliminar Viaje",
+    "quick_actions": "Acciones Rápidas",
+    "no_destinations": "Sin destinos"
   },
   "preferences": {
     "title": "Preferencias de Viaje",

@@ -18,12 +18,18 @@
   },
   "create_trip": {
     "title": "New Trip",
+    "step_itinerary": "Itinerary & Dates",
     "step_destination": "Destination",
     "step_dates": "Dates",
     "step_budget": "Budget",
     "step_preferences": "Preferences",
     "title_placeholder": "Trip Name",
+    "title_optional": "Trip Title (Optional)",
+    "title_placeholder_opt": "e.g., Eurotrip 2024",
     "destination_placeholder": "Where are you going?",
+    "stop": "Stop",
+    "where_to": "Where to?",
+    "add_stop": "Add Stop",
     "start_date": "Start Date",
     "end_date": "End Date",
     "budget_placeholder": "Total Budget ($)",
@@ -31,7 +37,8 @@
     "button_create": "Create Trip",
     "button_next": "Next",
     "button_back": "Back",
-    "creating": "Creating..."
+    "creating": "Creating...",
+    "overall_budget": "Set an overall budget for this entire itinerary."
   },
   "trip_detail": {
     "title": "Trip Details",
@@ -42,7 +49,9 @@
     "invite_members": "Invite Members",
     "generate_itinerary": "Generate Itinerary",
     "edit_trip": "Edit Trip",
-    "delete_trip": "Delete Trip"
+    "delete_trip": "Delete Trip",
+    "quick_actions": "Quick Actions",
+    "no_destinations": "No destinations"
   },
   "preferences": {
     "title": "Travel Preferences",

@@ -18,5 +18,8 @@
   "done": "Listo",
   "settings": "Configuración",
   "profile": "Perfil",
-  "logout": "Cerrar Sesión"
+  "logout": "Cerrar Sesión",
+  "notifications": "Notificaciones",
+  "privacy": "Privacidad",
+  "help_support": "Ayuda y Soporte"
 }
