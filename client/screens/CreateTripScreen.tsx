@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Pressable, ScrollView } from "react-native";
+import { View, StyleSheet, Pressable, ScrollView, Platform } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
-import { Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
@@ -22,6 +22,14 @@ import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import type { Trip } from "@/types";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+interface DestinationStop {
+  id: string;
+  location: string;
+  startDate: Date;
+  endDate: Date;
+  transportType: string | null;
+}
 
 const interests = [
   { id: "cultural", icon: "book" },
@@ -44,17 +52,25 @@ export default function CreateTripScreen() {
 
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
-  const [destination, setDestination] = useState("");
-  const [startDate, setStartDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(
-    new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-  );
+
+  // Dynamic multi-destination state
+  const [destinations, setDestinations] = useState<DestinationStop[]>([
+    {
+      id: "1",
+      location: "",
+      startDate: new Date(),
+      endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // Default 3 days
+      transportType: null,
+    }
+  ]);
+
   const [budget, setBudget] = useState("");
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [pace, setPace] = useState<"relaxed" | "moderate" | "fast">("moderate");
-  const [showStartPicker, setShowStartPicker] = useState(false);
-  const [showEndPicker, setShowEndPicker] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Date Picker Modals State
+  const [activeDatePicker, setActiveDatePicker] = useState<{ id: string, type: 'start' | 'end' } | null>(null);
 
   const totalSteps = 3;
 
@@ -87,15 +103,24 @@ export default function CreateTripScreen() {
     setLoading(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
+    // Calculate overall start/end based on stops
+    const overallStartDate = destinations[0].startDate;
+    const overallEndDate = destinations[destinations.length - 1].endDate;
+
     try {
       const tripData = {
-        title: title || `Trip to ${destination}`,
-        destination,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
+        title: title || `Trip to ${destinations[0].location}`,
+        startDate: overallStartDate.toISOString(),
+        endDate: overallEndDate.toISOString(),
         totalBudget: parseFloat(budget) || null,
         currency: "USD",
-        status: "planning",
+        destinations: destinations.map((d, index) => ({
+          location: d.location,
+          orderIndex: index,
+          startDate: d.startDate.toISOString(),
+          endDate: d.endDate.toISOString(),
+          transportType: d.transportType
+        }))
       };
 
       const response = await apiRequest("POST", "/api/trips", tripData);
@@ -115,9 +140,11 @@ export default function CreateTripScreen() {
   const canProceed = () => {
     switch (step) {
       case 1:
-        return destination.trim().length > 0;
+        // Must have at least one valid destination where start is before end
+        const isValid = destinations.every(d => d.location.trim().length > 0 && d.startDate < d.endDate);
+        return destinations.length > 0 && isValid;
       case 2:
-        return startDate < endDate;
+        return true;
       case 3:
         return true;
       default:
@@ -133,86 +160,142 @@ export default function CreateTripScreen() {
     });
   };
 
+  const addDestination = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const lastDest = destinations[destinations.length - 1];
+    setDestinations([...destinations, {
+      id: Math.random().toString(),
+      location: "",
+      startDate: new Date(lastDest.endDate),
+      endDate: new Date(lastDest.endDate.getTime() + 3 * 24 * 60 * 60 * 1000),
+      transportType: "flight"
+    }]);
+  };
+
+  const removeDestination = (id: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setDestinations(destinations.filter(d => d.id !== id));
+  };
+
+  const updateDestination = (id: string, field: keyof DestinationStop, value: any) => {
+    setDestinations(destinations.map(d => d.id === id ? { ...d, [field]: value } : d));
+  };
+
   const renderStep1 = () => (
     <View style={styles.stepContent}>
       <ThemedText type="h2" style={styles.stepTitle}>
-        {t("create_trip.step_destination")}
+        Itinerary & Dates
       </ThemedText>
 
       <Input
-        label={t("create_trip.title_placeholder")}
-        placeholder={t("create_trip.title_placeholder")}
+        label="Trip Title (Optional)"
+        placeholder="e.g., Eurotrip 2024"
         value={title}
         onChangeText={setTitle}
         leftIcon="edit-3"
       />
 
-      <Input
-        label={t("create_trip.destination_placeholder")}
-        placeholder={t("create_trip.destination_placeholder")}
-        value={destination}
-        onChangeText={setDestination}
-        leftIcon="map-pin"
-      />
+      <ScrollView style={{ marginTop: Spacing.md }} showsVerticalScrollIndicator={false}>
+        {destinations.map((dest, index) => (
+          <View key={dest.id} style={[styles.destinationCard, { backgroundColor: theme.backgroundSecondary }]}>
+            <View style={styles.destHeader}>
+              <ThemedText type="h4" style={styles.destIndex}>Stop {index + 1}</ThemedText>
+              {destinations.length > 1 && (
+                <Pressable onPress={() => removeDestination(dest.id)} style={styles.removeBtn}>
+                  <Feather name="x" size={20} color={Colors.error} />
+                </Pressable>
+              )}
+            </View>
+
+            <Input
+              placeholder="Where to?"
+              value={dest.location}
+              onChangeText={(text) => updateDestination(dest.id, "location", text)}
+              leftIcon="map-pin"
+            />
+
+            <View style={styles.dateRow}>
+              <Pressable
+                onPress={() => setActiveDatePicker({ id: dest.id, type: 'start' })}
+                style={[styles.smallDateBtn, { backgroundColor: theme.backgroundTertiary }]}
+              >
+                <Feather name="calendar" size={14} color={Colors.primary} />
+                <ThemedText type="caption">{formatDate(dest.startDate)}</ThemedText>
+              </Pressable>
+
+              <Feather name="arrow-right" size={16} color={theme.textSecondary} />
+
+              <Pressable
+                onPress={() => setActiveDatePicker({ id: dest.id, type: 'end' })}
+                style={[styles.smallDateBtn, { backgroundColor: theme.backgroundTertiary }]}
+              >
+                <Feather name="calendar" size={14} color={Colors.accent} />
+                <ThemedText type="caption">{formatDate(dest.endDate)}</ThemedText>
+              </Pressable>
+            </View>
+
+            {/* Transport Picker for NEXT destination (if not the last one) */}
+            {index < destinations.length - 1 && (
+              <View style={styles.transportContainer}>
+                <View style={[styles.transportLine, { backgroundColor: theme.border }]} />
+                <View style={[styles.transportPicker, { backgroundColor: theme.backgroundTertiary }]}>
+                  {["flight", "train", "car", "bus"].map(mode => (
+                    <Pressable
+                      key={mode}
+                      onPress={() => updateDestination(dest.id, "transportType", mode)}
+                      style={[styles.transportBtn, dest.transportType === mode && { backgroundColor: Colors.primary }]}
+                    >
+                      <Ionicons
+                        name={mode === 'flight' ? 'airplane' : mode === 'train' ? 'train' : mode === 'car' ? 'car' : 'bus'}
+                        size={16}
+                        color={dest.transportType === mode ? '#FFF' : theme.textSecondary}
+                      />
+                    </Pressable>
+                  ))}
+                </View>
+                <View style={[styles.transportLine, { backgroundColor: theme.border }]} />
+              </View>
+            )}
+
+            {/* Date Picker Modal for current dest */}
+            {activeDatePicker?.id === dest.id && (
+              <DateTimePicker
+                value={activeDatePicker.type === 'start' ? dest.startDate : dest.endDate}
+                mode="date"
+                minimumDate={activeDatePicker.type === 'end' ? dest.startDate : undefined}
+                onChange={(_, date) => {
+                  setActiveDatePicker(null);
+                  if (date) updateDestination(dest.id, activeDatePicker.type === 'start' ? 'startDate' : 'endDate', date);
+                }}
+              />
+            )}
+          </View>
+        ))}
+
+        <Button
+          variant="outline"
+          onPress={addDestination}
+          style={styles.addDestBtn}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm }}>
+            <Feather name="plus" size={18} color={theme.text} />
+            <ThemedText style={{ color: theme.text }}>Add Stop</ThemedText>
+          </View>
+        </Button>
+      </ScrollView>
+
     </View>
   );
 
   const renderStep2 = () => (
     <View style={styles.stepContent}>
       <ThemedText type="h2" style={styles.stepTitle}>
-        {t("create_trip.step_dates")} & {t("create_trip.step_budget")}
+        {t("create_trip.step_budget")}
       </ThemedText>
 
-      <View style={styles.dateContainer}>
-        <Pressable
-          onPress={() => setShowStartPicker(true)}
-          style={[styles.dateButton, { backgroundColor: theme.backgroundSecondary }]}
-        >
-          <Feather name="calendar" size={20} color={Colors.primary} />
-          <View style={styles.dateTextContainer}>
-            <ThemedText type="caption" style={{ color: theme.textSecondary }}>
-              {t("create_trip.start_date")}
-            </ThemedText>
-            <ThemedText type="body">{formatDate(startDate)}</ThemedText>
-          </View>
-        </Pressable>
-
-        <Pressable
-          onPress={() => setShowEndPicker(true)}
-          style={[styles.dateButton, { backgroundColor: theme.backgroundSecondary }]}
-        >
-          <Feather name="calendar" size={20} color={Colors.accent} />
-          <View style={styles.dateTextContainer}>
-            <ThemedText type="caption" style={{ color: theme.textSecondary }}>
-              {t("create_trip.end_date")}
-            </ThemedText>
-            <ThemedText type="body">{formatDate(endDate)}</ThemedText>
-          </View>
-        </Pressable>
-      </View>
-
-      {showStartPicker ? (
-        <DateTimePicker
-          value={startDate}
-          mode="date"
-          onChange={(_, date) => {
-            setShowStartPicker(false);
-            if (date) setStartDate(date);
-          }}
-        />
-      ) : null}
-
-      {showEndPicker ? (
-        <DateTimePicker
-          value={endDate}
-          mode="date"
-          minimumDate={startDate}
-          onChange={(_, date) => {
-            setShowEndPicker(false);
-            if (date) setEndDate(date);
-          }}
-        />
-      ) : null}
+      <ThemedText type="body" style={{ color: theme.textSecondary, marginBottom: Spacing.xl }}>
+        Set an overall budget for this entire itinerary.
+      </ThemedText>
 
       <Input
         label={t("create_trip.budget_placeholder")}
@@ -455,5 +538,66 @@ const styles = StyleSheet.create({
   },
   nextButton: {
     flex: 2,
+  },
+  destinationCard: {
+    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.lg,
+  },
+  destHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  destIndex: {
+    fontWeight: "600",
+  },
+  removeBtn: {
+    padding: Spacing.xs,
+  },
+  dateRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  smallDateBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.sm,
+  },
+  transportContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: Spacing.lg,
+  },
+  transportLine: {
+    flex: 1,
+    height: 1,
+  },
+  transportPicker: {
+    flexDirection: "row",
+    padding: Spacing.xs,
+    borderRadius: BorderRadius.full,
+    gap: Spacing.xs,
+    marginHorizontal: Spacing.md,
+  },
+  transportBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addDestBtn: {
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.xl,
   },
 });

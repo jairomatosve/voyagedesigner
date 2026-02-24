@@ -76,14 +76,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const { email, password, name } = req.body;
+      const { email, password, name, phone } = req.body;
 
       const { data, error } = await supabaseAdmin.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
         user_metadata: {
-          display_name: name
+          display_name: name,
+          phone: phone || null
         }
       });
 
@@ -103,6 +104,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all trips for the authenticated user
   app.get("/api/trips", authenticateUser, async (req, res) => {
     try {
+      if (!req.user) return res.status(401).send("Unauthorized");
       const trips = await storage.getTripsByUser(req.user.id);
       res.json(trips);
     } catch (error) {
@@ -114,7 +116,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get a specific trip
   app.get("/api/trips/:id", authenticateUser, async (req, res) => {
     try {
-      const trip = await storage.getTrip(req.params.id);
+      const id = req.params.id as string;
+      const trip = await storage.getTrip(id);
       if (!trip) return res.status(404).json({ error: "Trip not found" });
       res.json(trip);
     } catch (error) {
@@ -122,14 +125,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create a new trip
+  // Create a trip (Fails if missing data)
   app.post("/api/trips", authenticateUser, async (req, res) => {
     try {
-      const parsedData = insertTripSchema.omit({ id: true, ownerId: true }).parse(req.body);
-      const trip = await storage.createTrip(parsedData, req.user.id);
+      if (!req.user) return res.status(401).send("Unauthorized");
+      const { title, startDate, endDate, totalBudget, currency, destinations } = req.body;
+      const tripParams = { title, startDate: new Date(startDate), endDate: new Date(endDate), totalBudget, currency, ownerId: req.user.id };
+
+      const trip = await storage.createTrip(tripParams, destinations || [], req.user.id);
       res.status(201).json(trip);
     } catch (error) {
-      res.status(400).json({ error: "Invalid trip data" });
+      console.error(error);
+      res.status(500).json({ error: "Failed to create trip" });
     }
   });
 
@@ -138,14 +145,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate Itinerary (Gemini)
   app.post("/api/trips/:id/generate", authenticateUser, async (req, res) => {
     try {
-      const trip = await storage.getTrip(req.params.id);
+      const id = req.params.id as string;
+      const trip = await storage.getTrip(id);
       if (!trip) return res.status(404).json({ error: "Trip not found" });
 
       const { interests, pace } = req.body;
 
       // Use gemini-1.5-flash for fast generic generation
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const prompt = `You are a travel planning assistant. Plan a day-by-day JSON itinerary for a trip to ${trip.destination} from ${trip.startDate} to ${trip.endDate}. Interests: ${interests}, Pace: ${pace}. Return JSON output only matching this structure: { "itinerary": { "days": [ { "day_index": 1, "date": "...", "activities": [ { "title": "...", "description": "...", "startTime": "...", "endTime": "...", "estimatedCost": 0 } ] } ] } }`;
+
+      const stops = trip.destinations?.map(d => `${d.location} (from ${new Date(d.startDate).toLocaleDateString()} to ${new Date(d.endDate).toLocaleDateString()})`).join(", ");
+
+      const prompt = `You are a travel planning assistant. Plan a day-by-day JSON itinerary for a multi-destination trip: ${trip.title}. 
+The stops and dates are: ${stops}. 
+Interests: ${interests}, Pace: ${pace}. 
+Return JSON output only matching this structure: { "itinerary": { "days": [ { "day_index": 1, "date": "...", "activities": [ { "title": "...", "description": "...", "startTime": "...", "endTime": "...", "estimatedCost": 0 } ] } ] } }`;
 
       const result = await model.generateContent({
         contents: [{ role: "user", parts: [{ text: prompt }] }],
@@ -168,14 +182,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Reoptimize Itinerary (Gemini)
   app.post("/api/trips/:id/reoptimize", authenticateUser, async (req, res) => {
     try {
-      const trip = await storage.getTrip(req.params.id);
+      const id = req.params.id as string;
+      const trip = await storage.getTrip(id);
       if (!trip) return res.status(404).json({ error: "Trip not found" });
 
       const { failedActivity, timeAvailable, constraints } = req.body;
 
       // Use gemini-1.5-flash since we want speed
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const prompt = `You are an intelligent travel reoptimizer. A trip to ${trip.destination} had a disruption. The activity "${failedActivity}" failed. I have ${timeAvailable} hours available. 
+
+      const stops = trip.destinations?.map(d => d.location).join(", ");
+
+      const prompt = `You are an intelligent travel reoptimizer. A trip visiting ${stops} had a disruption. The activity "${failedActivity}" failed. I have ${timeAvailable} hours available. 
 Constraints: ${JSON.stringify(constraints)}.
 Suggest 2 optimized alternatives. 
 Return valid JSON only matching this structure: { "suggestions": [ { "title": "...", "description": "...", "duration": "...", "estimatedCost": 0 } ] }`;

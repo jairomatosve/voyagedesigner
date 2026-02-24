@@ -1,5 +1,5 @@
-import { users, trips, tripMembers, itineraryDays, activities, expenses } from "@shared/schema";
-import type { User, InsertUser, Trip, InsertTrip, TripMember } from "@shared/schema";
+import { users, trips, tripMembers, tripDestinations, itineraryDays, activities, expenses } from "@shared/schema";
+import type { User, InsertUser, Trip, TripMember, TripDestination } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -10,9 +10,9 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
 
   // Trip Methods
-  createTrip(trip: Omit<InsertTrip, "id">, ownerId: string): Promise<Trip>;
-  getTrip(tripId: string): Promise<Trip | undefined>;
-  getTripsByUser(userId: string): Promise<Trip[]>;
+  createTrip(trip: Omit<typeof trips.$inferInsert, "id">, destinations: Omit<typeof tripDestinations.$inferInsert, "id" | "tripId">[], ownerId: string): Promise<Trip & { destinations: TripDestination[] }>;
+  getTrip(tripId: string): Promise<(Trip & { destinations: TripDestination[] }) | undefined>;
+  getTripsByUser(userId: string): Promise<(Trip & { destinations: TripDestination[] })[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -31,10 +31,10 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async createTrip(insertTrip: Omit<InsertTrip, "id">, ownerId: string): Promise<Trip> {
-    // Start transaction since we need to create trip and trip_members
+  async createTrip(insertTrip: Omit<typeof trips.$inferInsert, "id">, destinations: Omit<typeof tripDestinations.$inferInsert, "id" | "tripId">[], ownerId: string): Promise<Trip & { destinations: TripDestination[] }> {
     return await db.transaction(async (tx) => {
-      const [trip] = await tx.insert(trips).values({ ...insertTrip, ownerId }).returning();
+      const tripPayload = { ...insertTrip, ownerId } as typeof trips.$inferInsert;
+      const [trip] = await tx.insert(trips).values(tripPayload).returning();
 
       // Automatically add the owner as an admin
       await tx.insert(tripMembers).values({
@@ -43,22 +43,47 @@ export class DatabaseStorage implements IStorage {
         role: "admin",
       });
 
-      return trip;
+      // Insert all trip destinations
+      const insertedDestinations = [];
+      if (destinations && destinations.length > 0) {
+        const destValues = destinations.map((d) => ({
+          tripId: trip.id,
+          location: d.location,
+          orderIndex: d.orderIndex,
+          startDate: d.startDate,
+          endDate: d.endDate,
+          transportType: d.transportType || null
+        }));
+        const inserted = await tx.insert(tripDestinations).values(destValues).returning();
+        insertedDestinations.push(...inserted);
+      }
+
+      return { ...trip, destinations: insertedDestinations };
     });
   }
 
-  async getTrip(tripId: string): Promise<Trip | undefined> {
+  async getTrip(tripId: string): Promise<(Trip & { destinations: TripDestination[] }) | undefined> {
     const [trip] = await db.select().from(trips).where(eq(trips.id, tripId));
-    return trip;
+    if (!trip) return undefined;
+
+    const destinations = await db.select().from(tripDestinations).where(eq(tripDestinations.tripId, tripId)).orderBy(tripDestinations.orderIndex);
+    return { ...trip, destinations };
   }
 
-  async getTripsByUser(userId: string): Promise<Trip[]> {
+  async getTripsByUser(userId: string): Promise<(Trip & { destinations: TripDestination[] })[]> {
     const userTrips = await db
       .select({ trip: trips })
       .from(trips)
       .innerJoin(tripMembers, eq(trips.id, tripMembers.tripId))
       .where(eq(tripMembers.userId, userId));
-    return userTrips.map((rs) => rs.trip);
+
+    const result = [];
+    for (const { trip } of userTrips) {
+      const destinations = await db.select().from(tripDestinations).where(eq(tripDestinations.tripId, trip.id)).orderBy(tripDestinations.orderIndex);
+      result.push({ ...trip, destinations });
+    }
+
+    return result;
   }
 }
 

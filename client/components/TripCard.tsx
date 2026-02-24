@@ -136,7 +136,9 @@ export function TripCard({ trip, onPress }: TripCardProps) {
               style={[styles.location, { color: theme.textSecondary }]}
               numberOfLines={1}
             >
-              {trip.destination}
+              {trip.destinations && trip.destinations.length > 0
+                ? trip.destinations.map(d => d.location).join(" → ")
+                : "No destinations"}
             </ThemedText>
           </View>
 

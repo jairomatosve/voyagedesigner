@@ -26,6 +26,11 @@ async function throwIfResNotOk(res: Response) {
     const text = (await res.text()) || res.statusText;
     throw new Error(`${res.status}: ${text}`);
   }
+
+  const contentType = res.headers.get("content-type");
+  if (contentType && contentType.includes("text/html")) {
+    throw new Error("Backend server is not running or returned HTML instead of API response. Please start the backend server.");
+  }
 }
 
 async function getAuthHeaders(): Promise<Record<string, string>> {

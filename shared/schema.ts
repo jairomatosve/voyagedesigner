@@ -9,6 +9,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   displayName: text("display_name"),
   avatarUrl: text("avatar_url"),
+  phone: varchar("phone", { length: 20 }), // Optional for now, but captured in signup
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -16,7 +17,6 @@ export const users = pgTable("users", {
 export const trips = pgTable("trips", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   title: text("title").notNull(),
-  destination: text("destination").notNull(),
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
   totalBudget: real("total_budget").default(0).notNull(),
@@ -24,6 +24,17 @@ export const trips = pgTable("trips", {
   status: varchar("status", { length: 20 }).default("planning").notNull(), // planning, active, completed, cancelled
   createdAt: timestamp("created_at").defaultNow().notNull(),
   ownerId: uuid("owner_id").references(() => users.id).notNull(), // FK to users
+});
+
+// Trip Destinations (Multi-stop logic)
+export const tripDestinations = pgTable("trip_destinations", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  tripId: uuid("trip_id").references(() => trips.id).notNull(),
+  location: text("location").notNull(),
+  orderIndex: integer("order_index").notNull(), // 0, 1, 2...
+  startDate: timestamp("start_date").notNull(), // Arrival
+  endDate: timestamp("end_date").notNull(), // Departure
+  transportType: varchar("transport_type", { length: 20 }), // flight, train, bus, car, ship - To get to the NEXT destination
 });
 
 // Trip Members (Multi-user roles)
@@ -79,6 +90,9 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export const insertTripSchema = createInsertSchema(trips);
 export const selectTripSchema = createSelectSchema(trips);
 export type Trip = z.infer<typeof selectTripSchema>;
+
+export const insertTripDestinationSchema = createInsertSchema(tripDestinations);
+export type TripDestination = typeof tripDestinations.$inferSelect;
 
 export const insertTripMemberSchema = createInsertSchema(tripMembers);
 export type TripMember = typeof tripMembers.$inferSelect;

@@ -6,10 +6,20 @@ export interface User {
   preferredLanguage: string;
 }
 
+export interface TripDestination {
+  id: string;
+  tripId: string;
+  location: string;
+  orderIndex: number;
+  startDate: string;
+  endDate: string;
+  transportType: string | null;
+}
+
 export interface Trip {
   id: string;
   title: string;
-  destination: string;
+  destinations?: TripDestination[]; // New dynamically mapped destinations array
   startDate: string;
   endDate: string;
   totalBudget: number;

@@ -106,7 +106,9 @@ export default function TripDetailScreen() {
             <View style={styles.heroLocation}>
               <Feather name="map-pin" size={16} color={Colors.accent} />
               <ThemedText type="body" style={styles.heroLocationText}>
-                {trip.destination}
+                {trip.destinations && trip.destinations.length > 0
+                  ? trip.destinations.map(d => d.location).join(" → ")
+                  : "No destinations"}
               </ThemedText>
             </View>
           </Animated.View>

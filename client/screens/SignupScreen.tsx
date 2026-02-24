@@ -27,6 +27,7 @@ export default function SignupScreen() {
   const { setUser, setAuthenticated } = useStore();
 
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -34,6 +35,7 @@ export default function SignupScreen() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{
     name?: string;
+    phone?: string;
     email?: string;
     password?: string;
     confirmPassword?: string;
@@ -44,6 +46,12 @@ export default function SignupScreen() {
 
     if (!name.trim()) {
       newErrors.name = t("auth:errors.name_required");
+    }
+
+    if (!phone.trim()) {
+      newErrors.phone = "Phone number is required"; // TODO: add to i18n
+    } else if (phone.length < 8) {
+      newErrors.phone = "Invalid phone number";
     }
 
     if (!email.trim()) {
@@ -79,6 +87,7 @@ export default function SignupScreen() {
         email,
         password,
         name,
+        phone,
       });
 
       // 2. Now login normally to get the session locally
@@ -143,6 +152,15 @@ export default function SignupScreen() {
             autoCapitalize="words"
             leftIcon="user"
             error={errors.name}
+          />
+
+          <Input
+            placeholder="+1 555-555-5555" // TODO: i18n phone placeholder
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
+            leftIcon="phone"
+            error={errors.phone}
           />
 
           <Input
