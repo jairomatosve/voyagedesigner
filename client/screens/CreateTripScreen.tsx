@@ -252,7 +252,9 @@ export default function CreateTripScreen() {
 
             <View style={styles.dateRow}>
               <Pressable
-                onPress={() => setActiveDatePicker({ id: dest.id, type: 'start' })}
+                onPress={() => {
+                  if (Platform.OS !== 'web') setActiveDatePicker({ id: dest.id, type: 'start' });
+                }}
                 style={[styles.smallDateBtn, { backgroundColor: theme.backgroundTertiary, overflow: 'hidden' }]}
               >
                 <Feather name="calendar" size={14} color={Colors.primary} />
@@ -268,6 +270,11 @@ export default function CreateTripScreen() {
                       updateDestination(dest.id, 'startDate', localDate);
                     }
                   },
+                  onClick: (e: any) => {
+                    try {
+                      if (e.target.showPicker) e.target.showPicker();
+                    } catch (err) { }
+                  },
                   style: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }
                 })}
               </Pressable>
@@ -275,7 +282,9 @@ export default function CreateTripScreen() {
               <Feather name="arrow-right" size={16} color={theme.textSecondary} />
 
               <Pressable
-                onPress={() => setActiveDatePicker({ id: dest.id, type: 'end' })}
+                onPress={() => {
+                  if (Platform.OS !== 'web') setActiveDatePicker({ id: dest.id, type: 'end' });
+                }}
                 style={[styles.smallDateBtn, { backgroundColor: theme.backgroundTertiary, overflow: 'hidden' }]}
               >
                 <Feather name="calendar" size={14} color={Colors.accent} />
@@ -290,6 +299,11 @@ export default function CreateTripScreen() {
                       const localDate = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
                       updateDestination(dest.id, 'endDate', localDate);
                     }
+                  },
+                  onClick: (e: any) => {
+                    try {
+                      if (e.target.showPicker) e.target.showPicker();
+                    } catch (err) { }
                   },
                   style: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }
                 })}
