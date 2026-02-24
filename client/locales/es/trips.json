@@ -27,6 +27,8 @@
     "title_optional": "Título del Viaje (Opcional)",
     "title_placeholder_opt": "ej. Eurotrip 2024",
     "destination_placeholder": "¿A dónde vas?",
+    "start_point": "Punto de Partida",
+    "return_point": "Punto de Retorno",
     "stop": "Parada",
     "where_to": "¿Hacia dónde?",
     "add_stop": "Añadir Parada",

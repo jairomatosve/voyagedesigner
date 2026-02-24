@@ -53,13 +53,27 @@ export default function CreateTripScreen() {
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
 
-  // Dynamic multi-destination state
+  // Dynamic multi-destination state (Start Point -> Stops... -> Return Point)
   const [destinations, setDestinations] = useState<DestinationStop[]>([
+    {
+      id: "start",
+      location: "",
+      startDate: new Date(),
+      endDate: new Date(),
+      transportType: "flight",
+    },
     {
       id: "1",
       location: "",
-      startDate: new Date(),
-      endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // Default 3 days
+      startDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      endDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+      transportType: "flight",
+    },
+    {
+      id: "return",
+      location: "",
+      startDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+      endDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
       transportType: null,
     }
   ]);
@@ -162,14 +176,29 @@ export default function CreateTripScreen() {
 
   const addDestination = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const lastDest = destinations[destinations.length - 1];
-    setDestinations([...destinations, {
-      id: Math.random().toString(),
-      location: "",
-      startDate: new Date(lastDest.endDate),
-      endDate: new Date(lastDest.endDate.getTime() + 3 * 24 * 60 * 60 * 1000),
-      transportType: "flight"
-    }]);
+
+    // Insert new stop BEFORE the Return Point
+    setDestinations((prev) => {
+      const returnPoint = prev[prev.length - 1];
+      const previousStop = prev[prev.length - 2] || prev[0];
+
+      const newStop: DestinationStop = {
+        id: Math.random().toString(),
+        location: "",
+        startDate: new Date(previousStop.endDate),
+        endDate: new Date(previousStop.endDate.getTime() + 3 * 24 * 60 * 60 * 1000),
+        transportType: "flight"
+      };
+
+      // Push Return Point's dates back
+      const updatedReturnPoint = {
+        ...returnPoint,
+        startDate: new Date(newStop.endDate.getTime() + 24 * 60 * 60 * 1000),
+        endDate: new Date(newStop.endDate.getTime() + 24 * 60 * 60 * 1000),
+      };
+
+      return [...prev.slice(0, prev.length - 1), newStop, updatedReturnPoint];
+    });
   };
 
   const removeDestination = (id: string) => {
@@ -199,7 +228,13 @@ export default function CreateTripScreen() {
         {destinations.map((dest, index) => (
           <View key={dest.id} style={[styles.destinationCard, { backgroundColor: theme.backgroundSecondary }]}>
             <View style={styles.destHeader}>
-              <ThemedText type="h4" style={styles.destIndex}>{t("create_trip.stop")} {index + 1}</ThemedText>
+              <ThemedText type="h4" style={styles.destIndex}>
+                {index === 0
+                  ? t("create_trip.start_point")
+                  : index === destinations.length - 1 && destinations.length > 1
+                    ? t("create_trip.return_point")
+                    : `${t("create_trip.stop")} ${index}`}
+              </ThemedText>
               {destinations.length > 1 && (
                 <Pressable onPress={() => removeDestination(dest.id)} style={styles.removeBtn}>
                   <Feather name="x" size={20} color={Colors.error} />
@@ -262,6 +297,7 @@ export default function CreateTripScreen() {
               <DateTimePicker
                 value={activeDatePicker.type === 'start' ? dest.startDate : dest.endDate}
                 mode="date"
+                display={Platform.OS === 'ios' ? 'inline' : 'calendar'}
                 minimumDate={activeDatePicker.type === 'end' ? dest.startDate : undefined}
                 onChange={(_, date) => {
                   setActiveDatePicker(null);

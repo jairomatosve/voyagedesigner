@@ -24,6 +24,8 @@
     "step_preferences": "Preferências",
     "title_placeholder": "Nome da Viagem",
     "destination_placeholder": "Para onde você vai?",
+    "start_point": "Ponto de Partida",
+    "return_point": "Ponto de Retorno",
     "start_date": "Data de Início",
     "end_date": "Data de Término",
     "budget_placeholder": "Orçamento Total ($)",
