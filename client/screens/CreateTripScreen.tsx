@@ -85,6 +85,7 @@ export default function CreateTripScreen() {
 
   // Date Picker Modals State
   const [activeDatePicker, setActiveDatePicker] = useState<{ id: string, type: 'start' | 'end' } | null>(null);
+  const [hoveredTransport, setHoveredTransport] = useState<string | null>(null);
 
   const totalSteps = 3;
 
@@ -252,20 +253,46 @@ export default function CreateTripScreen() {
             <View style={styles.dateRow}>
               <Pressable
                 onPress={() => setActiveDatePicker({ id: dest.id, type: 'start' })}
-                style={[styles.smallDateBtn, { backgroundColor: theme.backgroundTertiary }]}
+                style={[styles.smallDateBtn, { backgroundColor: theme.backgroundTertiary, overflow: 'hidden' }]}
               >
                 <Feather name="calendar" size={14} color={Colors.primary} />
                 <ThemedText type="caption">{formatDate(dest.startDate)}</ThemedText>
+                {Platform.OS === 'web' && React.createElement('input', {
+                  type: 'date',
+                  value: dest.startDate.toISOString().split('T')[0],
+                  min: index > 0 ? destinations[index - 1].endDate.toISOString().split('T')[0] : undefined,
+                  onChange: (e: any) => {
+                    if (e.target.value) {
+                      const [y, m, d] = e.target.value.split('-');
+                      const localDate = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+                      updateDestination(dest.id, 'startDate', localDate);
+                    }
+                  },
+                  style: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }
+                })}
               </Pressable>
 
               <Feather name="arrow-right" size={16} color={theme.textSecondary} />
 
               <Pressable
                 onPress={() => setActiveDatePicker({ id: dest.id, type: 'end' })}
-                style={[styles.smallDateBtn, { backgroundColor: theme.backgroundTertiary }]}
+                style={[styles.smallDateBtn, { backgroundColor: theme.backgroundTertiary, overflow: 'hidden' }]}
               >
                 <Feather name="calendar" size={14} color={Colors.accent} />
                 <ThemedText type="caption">{formatDate(dest.endDate)}</ThemedText>
+                {Platform.OS === 'web' && React.createElement('input', {
+                  type: 'date',
+                  value: dest.endDate.toISOString().split('T')[0],
+                  min: dest.startDate.toISOString().split('T')[0],
+                  onChange: (e: any) => {
+                    if (e.target.value) {
+                      const [y, m, d] = e.target.value.split('-');
+                      const localDate = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+                      updateDestination(dest.id, 'endDate', localDate);
+                    }
+                  },
+                  style: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }
+                })}
               </Pressable>
             </View>
 
@@ -274,19 +301,38 @@ export default function CreateTripScreen() {
               <View style={styles.transportContainer}>
                 <View style={[styles.transportLine, { backgroundColor: theme.border }]} />
                 <View style={[styles.transportPicker, { backgroundColor: theme.backgroundTertiary }]}>
-                  {["flight", "train", "car", "bus"].map(mode => (
-                    <Pressable
-                      key={mode}
-                      onPress={() => updateDestination(dest.id, "transportType", mode)}
-                      style={[styles.transportBtn, dest.transportType === mode && { backgroundColor: Colors.primary }]}
-                    >
-                      <Ionicons
-                        name={mode === 'flight' ? 'airplane' : mode === 'train' ? 'train' : mode === 'car' ? 'car' : 'bus'}
-                        size={16}
-                        color={dest.transportType === mode ? '#FFF' : theme.textSecondary}
-                      />
-                    </Pressable>
-                  ))}
+                  {["flight", "train", "car", "bus"].map(mode => {
+                    const isHoveredLocal = hoveredTransport === `${dest.id}-${mode}`;
+                    const isActive = dest.transportType === mode;
+                    const isExpanded = isActive || isHoveredLocal;
+
+                    return (
+                      <Pressable
+                        key={mode}
+                        onPress={() => updateDestination(dest.id, "transportType", mode)}
+                        //@ts-ignore
+                        onHoverIn={() => setHoveredTransport(`${dest.id}-${mode}`)}
+                        onHoverOut={() => setHoveredTransport(null)}
+                        style={[
+                          styles.transportBtn,
+                          isExpanded && { backgroundColor: isActive ? Colors.primary : theme.border, width: 'auto', paddingHorizontal: Spacing.md }
+                        ]}
+                      >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs }}>
+                          <Ionicons
+                            name={mode === 'flight' ? 'airplane' : mode === 'train' ? 'train' : mode === 'car' ? 'car' : 'bus'}
+                            size={16}
+                            color={isActive ? '#FFF' : theme.textSecondary}
+                          />
+                          {isExpanded && (
+                            <ThemedText type="caption" style={{ color: isActive ? '#FFF' : theme.text, fontWeight: '500' }}>
+                              {t(`create_trip.transport_${mode}`)}
+                            </ThemedText>
+                          )}
+                        </View>
+                      </Pressable>
+                    )
+                  })}
                 </View>
                 <View style={[styles.transportLine, { backgroundColor: theme.border }]} />
               </View>
