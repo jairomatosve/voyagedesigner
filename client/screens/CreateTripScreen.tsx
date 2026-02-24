@@ -259,24 +259,17 @@ export default function CreateTripScreen() {
               >
                 <Feather name="calendar" size={14} color={Colors.primary} />
                 <ThemedText type="caption">{formatDate(dest.startDate)}</ThemedText>
-                {Platform.OS === 'web' && React.createElement('input', {
-                  type: 'date',
-                  value: dest.startDate.toISOString().split('T')[0],
-                  min: index > 0 ? destinations[index - 1].endDate.toISOString().split('T')[0] : undefined,
-                  onChange: (e: any) => {
-                    if (e.target.value) {
-                      const [y, m, d] = e.target.value.split('-');
-                      const localDate = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
-                      updateDestination(dest.id, 'startDate', localDate);
-                    }
-                  },
-                  onClick: (e: any) => {
-                    try {
-                      if (e.target.showPicker) e.target.showPicker();
-                    } catch (err) { }
-                  },
-                  style: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }
-                })}
+                {Platform.OS === 'web' && (
+                  <DateTimePicker
+                    value={dest.startDate}
+                    mode="date"
+                    minimumDate={index > 0 ? destinations[index - 1].endDate : undefined}
+                    onChange={(_, date) => {
+                      if (date) updateDestination(dest.id, 'startDate', date);
+                    }}
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' } as any}
+                  />
+                )}
               </Pressable>
 
               <Feather name="arrow-right" size={16} color={theme.textSecondary} />
@@ -289,24 +282,17 @@ export default function CreateTripScreen() {
               >
                 <Feather name="calendar" size={14} color={Colors.accent} />
                 <ThemedText type="caption">{formatDate(dest.endDate)}</ThemedText>
-                {Platform.OS === 'web' && React.createElement('input', {
-                  type: 'date',
-                  value: dest.endDate.toISOString().split('T')[0],
-                  min: dest.startDate.toISOString().split('T')[0],
-                  onChange: (e: any) => {
-                    if (e.target.value) {
-                      const [y, m, d] = e.target.value.split('-');
-                      const localDate = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
-                      updateDestination(dest.id, 'endDate', localDate);
-                    }
-                  },
-                  onClick: (e: any) => {
-                    try {
-                      if (e.target.showPicker) e.target.showPicker();
-                    } catch (err) { }
-                  },
-                  style: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }
-                })}
+                {Platform.OS === 'web' && (
+                  <DateTimePicker
+                    value={dest.endDate}
+                    mode="date"
+                    minimumDate={dest.startDate}
+                    onChange={(_, date) => {
+                      if (date) updateDestination(dest.id, 'endDate', date);
+                    }}
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' } as any}
+                  />
+                )}
               </Pressable>
             </View>
 
