@@ -269,6 +269,14 @@ export default function CreateTripScreen() {
         {t("create_trip.title", "Planificar un nuevo viaje")}
       </ThemedText>
 
+      <Input
+        label={t("create_trip.title_optional", "Trip Title")}
+        placeholder={t("create_trip.title_placeholder_opt", "e.g., Eurotrip 2024")}
+        value={title}
+        onChangeText={setTitle}
+        leftIcon="edit-3"
+      />
+
       <View style={[styles.customInputContainer, { backgroundColor: theme.inputBackground, borderColor: theme.border }]}>
         <View style={styles.destInputRow}>
           <ThemedText type="body" style={{ fontWeight: 'bold' }}>
@@ -313,6 +321,22 @@ export default function CreateTripScreen() {
               {globalEndDate ? formatDate(new Date(globalEndDate + 'T12:00:00')) : t("create_trip.end_date_short", "Fecha de fin")}
             </ThemedText>
           </View>
+        </Pressable>
+      </View>
+
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: Spacing.xl, paddingHorizontal: Spacing.sm }}>
+        <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
+          <Feather name="plus" size={20} color={theme.textSecondary} />
+          <ThemedText type="body" style={{ color: theme.textSecondary }}>
+            {t("create_trip.invite_companions", "+ Invitar a compañeros")}
+          </ThemedText>
+        </Pressable>
+        <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
+          <Feather name="users" size={18} color={theme.textSecondary} />
+          <ThemedText type="body" style={{ color: theme.textSecondary }}>
+            {t("create_trip.tour_group", "Amigos")}
+          </ThemedText>
+          <Feather name="chevron-down" size={16} color={theme.textSecondary} />
         </Pressable>
       </View>
 
@@ -373,13 +397,6 @@ export default function CreateTripScreen() {
         {t("create_trip.step_itinerary")}
       </ThemedText>
 
-      <Input
-        label={t("create_trip.title_optional", "Trip Title (Optional)")}
-        placeholder={t("create_trip.title_placeholder_opt")}
-        value={title}
-        onChangeText={setTitle}
-        leftIcon="edit-3"
-      />
 
       <ScrollView style={{ marginTop: Spacing.md }} showsVerticalScrollIndicator={false}>
         {destinations.map((dest, index) => (
