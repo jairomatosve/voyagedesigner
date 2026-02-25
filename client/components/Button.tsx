@@ -169,9 +169,8 @@ export function Button({
             type={size === "small" ? "small" : "body"}
             style={[
               styles.buttonText,
-              { color: getTextColor() },
-              leftIcon && styles.textWithLeftIcon,
-              rightIcon && styles.textWithRightIcon,
+              leftIcon ? styles.textWithLeftIcon : undefined,
+              rightIcon ? styles.textWithRightIcon : undefined,
             ]}
           >
             {children}

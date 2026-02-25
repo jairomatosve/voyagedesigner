@@ -354,12 +354,15 @@ export default function CreateTripScreen() {
                 <Feather name="calendar" size={14} color={Colors.primary} />
                 <ThemedText type="caption">{formatDate(dest.startDate)}</ThemedText>
                 {Platform.OS === 'web' && (
-                  <DateTimePicker
-                    value={dest.startDate}
-                    mode="date"
-                    minimumDate={index > 0 ? destinations[index - 1].endDate : undefined}
-                    onChange={(_, date) => {
-                      if (date) updateDestination(dest.id, 'startDate', date);
+                  <input
+                    type="date"
+                    value={dest.startDate.toISOString().split('T')[0]}
+                    min={index > 0 ? destinations[index - 1].endDate.toISOString().split('T')[0] : undefined}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        const newDate = new Date(e.target.value + 'T12:00:00');
+                        updateDestination(dest.id, 'startDate', newDate);
+                      }
                     }}
                     style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' } as any}
                   />
@@ -377,12 +380,15 @@ export default function CreateTripScreen() {
                 <Feather name="calendar" size={14} color={Colors.accent} />
                 <ThemedText type="caption">{formatDate(dest.endDate)}</ThemedText>
                 {Platform.OS === 'web' && (
-                  <DateTimePicker
-                    value={dest.endDate}
-                    mode="date"
-                    minimumDate={dest.startDate}
-                    onChange={(_, date) => {
-                      if (date) updateDestination(dest.id, 'endDate', date);
+                  <input
+                    type="date"
+                    value={dest.endDate.toISOString().split('T')[0]}
+                    min={dest.startDate.toISOString().split('T')[0]}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        const newDate = new Date(e.target.value + 'T12:00:00');
+                        updateDestination(dest.id, 'endDate', newDate);
+                      }
                     }}
                     style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' } as any}
                   />
@@ -433,7 +439,7 @@ export default function CreateTripScreen() {
             )}
 
             {/* Date Picker Modal for current dest */}
-            {activeDatePicker?.id === dest.id && (
+            {activeDatePicker?.id === dest.id && Platform.OS !== 'web' && (
               <DateTimePicker
                 value={activeDatePicker.type === 'start' ? dest.startDate : dest.endDate}
                 mode="date"

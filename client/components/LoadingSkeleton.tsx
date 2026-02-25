@@ -44,9 +44,9 @@ export function LoadingSkeleton({
       style={[
         styles.skeleton,
         {
-          width,
-          height,
-          borderRadius,
+          width: width as any,
+          height: height as any,
+          borderRadius: borderRadius as any,
           backgroundColor: theme.backgroundTertiary,
         },
         style,
