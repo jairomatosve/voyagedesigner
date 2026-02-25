@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Pressable, ScrollView, Platform } from "react-native";
+import { View, StyleSheet, Pressable, ScrollView, Platform, TextInput, Modal } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useHeaderHeight } from "@react-navigation/elements";
@@ -58,6 +58,7 @@ export default function CreateTripScreen() {
   const [globalDestination, setGlobalDestination] = useState("");
   const [globalStartDate, setGlobalStartDate] = useState<string | null>(null);
   const [globalEndDate, setGlobalEndDate] = useState<string | null>(null);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [markedDates, setMarkedDates] = useState<any>({});
 
   // Dynamic multi-destination state (Start Point -> Stops... -> Return Point)
@@ -264,52 +265,105 @@ export default function CreateTripScreen() {
 
   const renderStep1 = () => (
     <View style={styles.stepContent}>
-      <ThemedText type="h2" style={styles.stepTitle}>
-        {t("create_trip.step_destination_and_dates")}
+      <ThemedText type="h1" style={[styles.stepTitle, { textAlign: 'center', marginBottom: Spacing['2xl'] }]}>
+        {t("create_trip.title", "Planificar un nuevo viaje")}
       </ThemedText>
 
-      <Input
-        label={t("create_trip.where_to")}
-        placeholder="e.g., Europe, Japan, Hawaii..."
-        value={globalDestination}
-        onChangeText={setGlobalDestination}
-        leftIcon="map-pin"
-      />
-
-      <Input
-        label={t("create_trip.title_optional")}
-        placeholder={t("create_trip.title_placeholder_opt")}
-        value={title}
-        onChangeText={setTitle}
-        leftIcon="edit-3"
-      />
-
-      <ThemedText type="h4" style={styles.sectionTitle}>
-        {t("create_trip.step_dates")}
-      </ThemedText>
-
-      <View style={{ flex: 1, borderRadius: BorderRadius.lg, overflow: 'hidden', borderWidth: 1, borderColor: theme.border }}>
-        <CalendarList
-          horizontal={Platform.OS === 'web'}
-          pagingEnabled={Platform.OS === 'web'}
-          pastScrollRange={0}
-          futureScrollRange={24}
-          markingType={'period'}
-          markedDates={markedDates}
-          onDayPress={onDayPress}
-          theme={{
-            backgroundColor: theme.backgroundSecondary,
-            calendarBackground: theme.backgroundSecondary,
-            textSectionTitleColor: theme.textSecondary,
-            selectedDayBackgroundColor: Colors.primary,
-            selectedDayTextColor: '#ffffff',
-            todayTextColor: Colors.primary,
-            dayTextColor: theme.text,
-            textDisabledColor: theme.border,
-            monthTextColor: theme.text,
-          }}
-        />
+      <View style={[styles.customInputContainer, { backgroundColor: theme.inputBackground, borderColor: theme.border }]}>
+        <View style={styles.destInputRow}>
+          <ThemedText type="body" style={{ fontWeight: 'bold' }}>
+            {t("create_trip.where_to", "¿A dónde?")}
+          </ThemedText>
+          <TextInput
+            style={[styles.transparentInput, { color: theme.text }]}
+            placeholder={t("create_trip.destination_placeholder", "p. ej. París, Hawái, Japón")}
+            placeholderTextColor={theme.textSecondary}
+            value={globalDestination}
+            onChangeText={setGlobalDestination}
+            {...Platform.select({ web: { outlineStyle: 'none' } as any })}
+          />
+        </View>
       </View>
+      {!globalDestination && (
+        <ThemedText type="caption" style={{ color: Colors.error, textAlign: 'center', marginBottom: Spacing.xl }}>
+          {t("create_trip.choose_destination_prompt", "Elige un destino para comenzar a planificar")}
+        </ThemedText>
+      )}
+
+      {globalDestination ? <View style={{ height: Spacing.xl }} /> : null}
+
+      <View style={[styles.customInputContainer, { backgroundColor: theme.inputBackground, borderColor: theme.border, padding: 0, overflow: 'hidden' }]}>
+        <ThemedText type="small" style={{ fontWeight: '600', padding: Spacing.md, paddingBottom: 0 }}>
+          {t("create_trip.dates_optional", "Fechas (opcional)")}
+        </ThemedText>
+        <Pressable
+          style={styles.datesRow}
+          onPress={() => setShowCalendarModal(true)}
+        >
+          <View style={styles.dateBlock}>
+            <Feather name="calendar" size={16} color={theme.textSecondary} />
+            <ThemedText type="body" style={{ color: globalStartDate ? theme.text : theme.textSecondary }}>
+              {globalStartDate ? formatDate(new Date(globalStartDate + 'T12:00:00')) : t("create_trip.start_date_short", "Fecha de inicio")}
+            </ThemedText>
+          </View>
+          <View style={{ width: 1, height: 20, backgroundColor: theme.border }} />
+          <View style={styles.dateBlock}>
+            <Feather name="calendar" size={16} color={theme.textSecondary} />
+            <ThemedText type="body" style={{ color: globalEndDate ? theme.text : theme.textSecondary }}>
+              {globalEndDate ? formatDate(new Date(globalEndDate + 'T12:00:00')) : t("create_trip.end_date_short", "Fecha de fin")}
+            </ThemedText>
+          </View>
+        </Pressable>
+      </View>
+
+      <Modal
+        visible={showCalendarModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowCalendarModal(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setShowCalendarModal(false)}>
+          <Pressable style={[styles.modalContent, { backgroundColor: theme.backgroundDefault }]} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.modalHeader}>
+              <ThemedText type="h4">{t("create_trip.step_dates")}</ThemedText>
+              <Pressable onPress={() => setShowCalendarModal(false)} style={{ padding: Spacing.xs }}>
+                <Feather name="x" size={24} color={theme.text} />
+              </Pressable>
+            </View>
+            <View style={{ flex: 1, borderRadius: BorderRadius.lg, overflow: 'hidden', borderWidth: 1, borderColor: theme.border, marginHorizontal: Spacing.md, marginBottom: Spacing.md }}>
+              <CalendarList
+                horizontal={Platform.OS === 'web'}
+                pagingEnabled={Platform.OS === 'web'}
+                pastScrollRange={0}
+                futureScrollRange={24}
+                markingType={'period'}
+                markedDates={markedDates}
+                onDayPress={onDayPress}
+                theme={{
+                  backgroundColor: theme.backgroundSecondary,
+                  calendarBackground: theme.backgroundSecondary,
+                  textSectionTitleColor: theme.textSecondary,
+                  selectedDayBackgroundColor: Colors.primary,
+                  selectedDayTextColor: '#ffffff',
+                  todayTextColor: Colors.primary,
+                  dayTextColor: theme.text,
+                  textDisabledColor: theme.border,
+                  monthTextColor: theme.text,
+                }}
+              />
+            </View>
+            <View style={{ padding: Spacing.lg, borderTopWidth: 1, borderColor: theme.border, flexDirection: 'row', justifyContent: 'center', gap: Spacing.md }}>
+              <Button onPress={() => { setGlobalStartDate(null); setGlobalEndDate(null); setMarkedDates({}); }} variant="ghost" style={{ flex: 1 }}>
+                {t("common:clear", "Borrar fechas")}
+              </Button>
+              <Button onPress={() => setShowCalendarModal(false)} variant="primary" style={{ flex: 1 }}>
+                {t("common:save", "Guardar fechas")}
+              </Button>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
     </View>
   );
 
@@ -318,6 +372,14 @@ export default function CreateTripScreen() {
       <ThemedText type="h2" style={styles.stepTitle}>
         {t("create_trip.step_itinerary")}
       </ThemedText>
+
+      <Input
+        label={t("create_trip.title_optional", "Trip Title (Optional)")}
+        placeholder={t("create_trip.title_placeholder_opt")}
+        value={title}
+        onChangeText={setTitle}
+        leftIcon="edit-3"
+      />
 
       <ScrollView style={{ marginTop: Spacing.md }} showsVerticalScrollIndicator={false}>
         {destinations.map((dest, index) => (
@@ -782,5 +844,50 @@ const styles = StyleSheet.create({
   addDestBtn: {
     marginTop: Spacing.xs,
     marginBottom: Spacing.xl,
+  },
+  customInputContainer: {
+    borderWidth: 1.5,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.xs,
+  },
+  destInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.lg,
+  },
+  transparentInput: {
+    flex: 1,
+    marginLeft: Spacing.md,
+    fontSize: 16,
+  },
+  datesRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.lg,
+  },
+  dateBlock: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    height: "80%",
+    borderTopLeftRadius: BorderRadius.xl,
+    borderTopRightRadius: BorderRadius.xl,
+    overflow: "hidden",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: Spacing.lg,
   },
 });
