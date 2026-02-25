@@ -18,6 +18,7 @@
   },
   "create_trip": {
     "title": "Nova Viagem",
+    "step_destination_and_dates": "Onde e Quando?",
     "step_destination": "Destino",
     "step_dates": "Datas",
     "step_budget": "Orçamento",

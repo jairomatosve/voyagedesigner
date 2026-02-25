@@ -18,7 +18,8 @@
   },
   "create_trip": {
     "title": "New Trip",
-    "step_itinerary": "Itinerary & Dates",
+    "step_destination_and_dates": "Where & When?",
+    "step_itinerary": "Detailed Itinerary",
     "step_destination": "Destination",
     "step_dates": "Dates",
     "step_budget": "Budget",

@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { CalendarList, DateData } from "react-native-calendars";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -53,30 +54,14 @@ export default function CreateTripScreen() {
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
 
+  // Step 1: Global Range State
+  const [globalDestination, setGlobalDestination] = useState("");
+  const [globalStartDate, setGlobalStartDate] = useState<string | null>(null);
+  const [globalEndDate, setGlobalEndDate] = useState<string | null>(null);
+  const [markedDates, setMarkedDates] = useState<any>({});
+
   // Dynamic multi-destination state (Start Point -> Stops... -> Return Point)
-  const [destinations, setDestinations] = useState<DestinationStop[]>([
-    {
-      id: "start",
-      location: "",
-      startDate: new Date(),
-      endDate: new Date(),
-      transportType: "flight",
-    },
-    {
-      id: "1",
-      location: "",
-      startDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      endDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-      transportType: "flight",
-    },
-    {
-      id: "return",
-      location: "",
-      startDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-      endDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-      transportType: null,
-    }
-  ]);
+  const [destinations, setDestinations] = useState<DestinationStop[]>([]);
 
   const [budget, setBudget] = useState("");
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
@@ -87,7 +72,73 @@ export default function CreateTripScreen() {
   const [activeDatePicker, setActiveDatePicker] = useState<{ id: string, type: 'start' | 'end' } | null>(null);
   const [hoveredTransport, setHoveredTransport] = useState<string | null>(null);
 
-  const totalSteps = 3;
+  const totalSteps = 4;
+
+  // Sync internal destinations when reaching Step 2 for the first time
+  React.useEffect(() => {
+    if (step === 2 && destinations.length === 0 && globalStartDate && globalEndDate) {
+      const start = new Date(globalStartDate + 'T12:00:00');
+      const end = new Date(globalEndDate + 'T12:00:00');
+
+      setDestinations([
+        {
+          id: "start",
+          location: globalDestination,
+          startDate: start,
+          endDate: start,
+          transportType: "flight",
+        },
+        {
+          id: "1",
+          location: "",
+          startDate: new Date(start.getTime() + 24 * 60 * 60 * 1000),
+          endDate: new Date(end.getTime() - 24 * 60 * 60 * 1000),
+          transportType: "flight",
+        },
+        {
+          id: "return",
+          location: "", // Ask user where they return
+          startDate: end,
+          endDate: end,
+          transportType: null,
+        }
+      ]);
+    }
+  }, [step, globalStartDate, globalEndDate]);
+
+  const onDayPress = (day: DateData) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (!globalStartDate || (globalStartDate && globalEndDate)) {
+      setGlobalStartDate(day.dateString);
+      setGlobalEndDate(null);
+      setMarkedDates({ [day.dateString]: { startingDay: true, color: Colors.primary, textColor: '#fff' } });
+    } else if (globalStartDate && !globalEndDate) {
+      const start = new Date(globalStartDate);
+      const end = new Date(day.dateString);
+
+      if (end <= start) {
+        setGlobalStartDate(day.dateString);
+        setMarkedDates({ [day.dateString]: { startingDay: true, color: Colors.primary, textColor: '#fff' } });
+      } else {
+        setGlobalEndDate(day.dateString);
+        const range: any = {};
+        let current = new Date(start);
+
+        while (current <= end) {
+          const dateStr = current.toISOString().split('T')[0];
+          if (dateStr === globalStartDate) {
+            range[dateStr] = { startingDay: true, color: Colors.primary, textColor: '#fff' };
+          } else if (dateStr === day.dateString) {
+            range[dateStr] = { endingDay: true, color: Colors.primary, textColor: '#fff' };
+          } else {
+            range[dateStr] = { color: theme.backgroundTertiary, textColor: theme.text };
+          }
+          current.setDate(current.getDate() + 1);
+        }
+        setMarkedDates(range);
+      }
+    }
+  };
 
   const toggleInterest = (id: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -118,15 +169,13 @@ export default function CreateTripScreen() {
     setLoading(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    // Calculate overall start/end based on stops
-    const overallStartDate = destinations[0].startDate;
-    const overallEndDate = destinations[destinations.length - 1].endDate;
-
     try {
+      if (!globalStartDate || !globalEndDate) throw new Error("Missing dates");
+
       const tripData = {
-        title: title || `Trip to ${destinations[0].location}`,
-        startDate: overallStartDate.toISOString(),
-        endDate: overallEndDate.toISOString(),
+        title: title || `Trip to ${globalDestination}`,
+        startDate: new Date(globalStartDate).toISOString(),
+        endDate: new Date(globalEndDate).toISOString(),
         totalBudget: parseFloat(budget) || null,
         currency: "USD",
         destinations: destinations.map((d, index) => ({
@@ -155,12 +204,14 @@ export default function CreateTripScreen() {
   const canProceed = () => {
     switch (step) {
       case 1:
-        // Must have at least one valid destination where start is before end
-        const isValid = destinations.every(d => d.location.trim().length > 0 && d.startDate < d.endDate);
-        return destinations.length > 0 && isValid;
+        // Must have global destination and dual dates selected
+        return globalDestination.trim().length > 0 && globalStartDate !== null && globalEndDate !== null;
       case 2:
-        return true;
+        // Must have at least one valid destination where start is before end
+        const isValid = destinations.every(d => d.location.trim().length > 0 && d.startDate <= d.endDate);
+        return destinations.length > 0 && isValid;
       case 3:
+      case 4:
         return true;
       default:
         return false;
@@ -214,8 +265,16 @@ export default function CreateTripScreen() {
   const renderStep1 = () => (
     <View style={styles.stepContent}>
       <ThemedText type="h2" style={styles.stepTitle}>
-        {t("create_trip.step_itinerary")}
+        {t("create_trip.step_destination_and_dates")}
       </ThemedText>
+
+      <Input
+        label={t("create_trip.where_to")}
+        placeholder="e.g., Europe, Japan, Hawaii..."
+        value={globalDestination}
+        onChangeText={setGlobalDestination}
+        leftIcon="map-pin"
+      />
 
       <Input
         label={t("create_trip.title_optional")}
@@ -224,6 +283,41 @@ export default function CreateTripScreen() {
         onChangeText={setTitle}
         leftIcon="edit-3"
       />
+
+      <ThemedText type="h4" style={styles.sectionTitle}>
+        {t("create_trip.step_dates")}
+      </ThemedText>
+
+      <View style={{ flex: 1, borderRadius: BorderRadius.lg, overflow: 'hidden', borderWidth: 1, borderColor: theme.border }}>
+        <CalendarList
+          horizontal={Platform.OS === 'web'}
+          pagingEnabled={Platform.OS === 'web'}
+          pastScrollRange={0}
+          futureScrollRange={24}
+          markingType={'period'}
+          markedDates={markedDates}
+          onDayPress={onDayPress}
+          theme={{
+            backgroundColor: theme.backgroundSecondary,
+            calendarBackground: theme.backgroundSecondary,
+            textSectionTitleColor: theme.textSecondary,
+            selectedDayBackgroundColor: Colors.primary,
+            selectedDayTextColor: '#ffffff',
+            todayTextColor: Colors.primary,
+            dayTextColor: theme.text,
+            textDisabledColor: theme.border,
+            monthTextColor: theme.text,
+          }}
+        />
+      </View>
+    </View>
+  );
+
+  const renderStep2 = () => (
+    <View style={styles.stepContent}>
+      <ThemedText type="h2" style={styles.stepTitle}>
+        {t("create_trip.step_itinerary")}
+      </ThemedText>
 
       <ScrollView style={{ marginTop: Spacing.md }} showsVerticalScrollIndicator={false}>
         {destinations.map((dest, index) => (
@@ -369,7 +463,7 @@ export default function CreateTripScreen() {
     </View>
   );
 
-  const renderStep2 = () => (
+  const renderStep3 = () => (
     <View style={styles.stepContent}>
       <ThemedText type="h2" style={styles.stepTitle}>
         {t("create_trip.step_budget")}
@@ -390,7 +484,7 @@ export default function CreateTripScreen() {
     </View>
   );
 
-  const renderStep3 = () => (
+  const renderStep4 = () => (
     <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>
       <ThemedText type="h2" style={styles.stepTitle}>
         {t("create_trip.step_preferences")}
@@ -507,6 +601,7 @@ export default function CreateTripScreen() {
         {step === 1 && renderStep1()}
         {step === 2 && renderStep2()}
         {step === 3 && renderStep3()}
+        {step === 4 && renderStep4()}
 
         <View style={styles.buttonContainer}>
           <Button
