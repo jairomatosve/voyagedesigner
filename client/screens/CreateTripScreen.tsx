@@ -52,9 +52,18 @@ export default function CreateTripScreen() {
       setIsSearching(true);
       setShowSuggestions(true);
       try {
-        const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(text)}`);
+        const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(text)}&featuretype=city&addressdetails=1`);
         const data = await resp.json();
-        setSuggestions(data.slice(0, 5));
+        const formattedData = data.slice(0, 5).map((item: any) => {
+          const parts = item.display_name.split(",");
+          const city = parts[0].trim();
+          const country = parts[parts.length - 1].trim();
+          return {
+            ...item,
+            clean_name: `${city}, ${country}`
+          };
+        });
+        setSuggestions(formattedData);
       } catch (e) {
         console.error("Nominatim search failed:", e);
       } finally {
@@ -67,7 +76,7 @@ export default function CreateTripScreen() {
   };
 
   const selectSuggestion = (item: any) => {
-    setGlobalDestination(item.display_name);
+    setGlobalDestination(item.clean_name);
     setGlobalLatitude(parseFloat(item.lat));
     setGlobalLongitude(parseFloat(item.lon));
     setShowSuggestions(false);
@@ -205,7 +214,7 @@ export default function CreateTripScreen() {
                     style={{ padding: Spacing.md, borderBottomWidth: idx < suggestions.length - 1 ? 1 : 0, borderBottomColor: theme.border }}
                     onPress={() => selectSuggestion(item)}
                   >
-                    <ThemedText style={{ color: theme.text }}>{item.display_name}</ThemedText>
+                    <ThemedText style={{ color: theme.text }}>{item.clean_name}</ThemedText>
                   </Pressable>
                 ))}
               </View>
@@ -327,7 +336,7 @@ export default function CreateTripScreen() {
             style={styles.nextButton}
             rightIcon={<Feather name="check" size={20} color={!canProceed() ? theme.textSecondary : "#FFFFFF"} />}
           >
-            {t("common:create_trip", "Crear Viaje")}
+            {t("create_trip.button_create", "Create Trip")}
           </Button>
         </View>
       </KeyboardAwareScrollViewCompat>
