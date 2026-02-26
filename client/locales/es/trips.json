@@ -45,7 +45,13 @@
     "button_next": "Siguiente",
     "button_back": "Atrás",
     "creating": "Creando...",
-    "overall_budget": "Establece un presupuesto global para todo el itinerario."
+    "overall_budget": "Establece un presupuesto global para todo el itinerario.",
+    "choose_destination_prompt": "Elige un destino para comenzar a planificar",
+    "dates_optional": "Fechas (opcional)",
+    "start_date_short": "Fecha de inicio",
+    "end_date_short": "Fecha de fin",
+    "invite_companions": "+ Invitar a compañeros",
+    "tour_group": "Amigos"
   },
   "trip_detail": {
     "title": "Detalles del Viaje",

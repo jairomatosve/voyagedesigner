@@ -45,7 +45,13 @@
     "button_next": "Next",
     "button_back": "Back",
     "creating": "Creating...",
-    "overall_budget": "Set an overall budget for this entire itinerary."
+    "overall_budget": "Set an overall budget for this entire itinerary.",
+    "choose_destination_prompt": "Choose a destination to start planning",
+    "dates_optional": "Dates (optional)",
+    "start_date_short": "Start Date",
+    "end_date_short": "End Date",
+    "invite_companions": "+ Invite companions",
+    "tour_group": "Friends"
   },
   "trip_detail": {
     "title": "Trip Details",

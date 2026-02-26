@@ -44,7 +44,14 @@
     "title_placeholder_opt": "ex. Eurotrip 2024",
     "stop": "Parada",
     "where_to": "Para onde?",
-    "add_stop": "Adicionar Parada"
+    "add_stop": "Adicionar Parada",
+    "overall_budget": "Defina um orçamento global para todo este itinerário.",
+    "choose_destination_prompt": "Escolha um destino para começar a planejar",
+    "dates_optional": "Datas (opcional)",
+    "start_date_short": "Data de início",
+    "end_date_short": "Data de término",
+    "invite_companions": "+ Convidar companheiros",
+    "tour_group": "Amigos"
   },
   "trip_detail": {
     "title": "Detalhes da Viagem",
