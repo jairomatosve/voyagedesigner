@@ -129,8 +129,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/trips", authenticateUser, async (req, res) => {
     try {
       if (!req.user) return res.status(401).send("Unauthorized");
-      const { title, startDate, endDate, totalBudget, currency, destinations } = req.body;
-      const tripParams = { title, startDate: new Date(startDate), endDate: new Date(endDate), totalBudget, currency, ownerId: req.user.id };
+      const { title, destination, visibility, latitude, longitude, startDate, endDate, totalBudget, currency, destinations } = req.body;
+      const tripParams = { title, destination, visibility, latitude, longitude, startDate: new Date(startDate), endDate: new Date(endDate), totalBudget, currency, ownerId: req.user.id };
 
       const trip = await storage.createTrip(tripParams, destinations || [], req.user.id);
       res.status(201).json(trip);

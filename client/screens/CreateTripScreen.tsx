@@ -56,6 +56,12 @@ export default function CreateTripScreen() {
 
   // Step 1: Global Range State
   const [globalDestination, setGlobalDestination] = useState("");
+  const [globalLatitude, setGlobalLatitude] = useState<number | null>(null);
+  const [globalLongitude, setGlobalLongitude] = useState<number | null>(null);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [globalVisibility, setGlobalVisibility] = useState<"public" | "contacts" | "private">("private");
   const [globalStartDate, setGlobalStartDate] = useState<string | null>(null);
   const [globalEndDate, setGlobalEndDate] = useState<string | null>(null);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
@@ -106,6 +112,34 @@ export default function CreateTripScreen() {
       ]);
     }
   }, [step, globalStartDate, globalEndDate]);
+
+  const handleDestinationSearch = async (text: string) => {
+    setGlobalDestination(text);
+    if (text.length > 2) {
+      setIsSearching(true);
+      setShowSuggestions(true);
+      try {
+        const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(text)}`);
+        const data = await resp.json();
+        setSuggestions(data.slice(0, 5));
+      } catch (e) {
+        console.error("Nominatim search failed:", e);
+      } finally {
+        setIsSearching(false);
+      }
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const selectSuggestion = (item: any) => {
+    setGlobalDestination(item.display_name);
+    setGlobalLatitude(parseFloat(item.lat));
+    setGlobalLongitude(parseFloat(item.lon));
+    setShowSuggestions(false);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
 
   const onDayPress = (day: DateData) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -174,7 +208,11 @@ export default function CreateTripScreen() {
       if (!globalStartDate || !globalEndDate) throw new Error("Missing dates");
 
       const tripData = {
-        title: title || `Trip to ${globalDestination}`,
+        title: title || `Trip to ${globalDestination.split(',')[0]}`,
+        destination: globalDestination,
+        visibility: globalVisibility,
+        latitude: globalLatitude,
+        longitude: globalLongitude,
         startDate: new Date(globalStartDate).toISOString(),
         endDate: new Date(globalEndDate).toISOString(),
         totalBudget: parseFloat(budget) || null,
@@ -287,10 +325,23 @@ export default function CreateTripScreen() {
             placeholder={t("create_trip.destination_placeholder", "p. ej. París, Hawái, Japón")}
             placeholderTextColor={theme.textSecondary}
             value={globalDestination}
-            onChangeText={setGlobalDestination}
+            onChangeText={handleDestinationSearch}
             {...Platform.select({ web: { outlineStyle: 'none' } as any })}
           />
         </View>
+        {showSuggestions && suggestions.length > 0 && (
+          <View style={{ backgroundColor: theme.backgroundTertiary, borderTopWidth: 1, borderTopColor: theme.border }}>
+            {suggestions.map((item, idx) => (
+              <Pressable
+                key={item.place_id || idx}
+                style={{ padding: Spacing.md, borderBottomWidth: idx < suggestions.length - 1 ? 1 : 0, borderBottomColor: theme.border }}
+                onPress={() => selectSuggestion(item)}
+              >
+                <ThemedText style={{ color: theme.text }}>{item.display_name}</ThemedText>
+              </Pressable>
+            ))}
+          </View>
+        )}
       </View>
       {!globalDestination && (
         <ThemedText type="caption" style={{ color: Colors.error, textAlign: 'center', marginBottom: Spacing.xl }}>
@@ -324,17 +375,25 @@ export default function CreateTripScreen() {
         </Pressable>
       </View>
 
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: Spacing.xl, paddingHorizontal: Spacing.sm }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: Spacing.xl, paddingHorizontal: Spacing.sm, zIndex: -1 }}>
         <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
           <Feather name="plus" size={20} color={theme.textSecondary} />
           <ThemedText type="body" style={{ color: theme.textSecondary }}>
-            {t("create_trip.invite_companions", "+ Invitar a compañeros")}
+            {t("create_trip.invite_companions", "+ Travel Crew")}
           </ThemedText>
         </Pressable>
-        <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
-          <Feather name="users" size={18} color={theme.textSecondary} />
-          <ThemedText type="body" style={{ color: theme.textSecondary }}>
-            {t("create_trip.tour_group", "Amigos")}
+        <Pressable
+          onPress={() => {
+            const options: ("public" | "contacts" | "private")[] = ["contacts", "public", "private"];
+            const nextIdx = (options.indexOf(globalVisibility) + 1) % options.length;
+            setGlobalVisibility(options[nextIdx]);
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md, backgroundColor: theme.backgroundTertiary, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: BorderRadius.sm }}
+        >
+          <Feather name={globalVisibility === 'public' ? "globe" : globalVisibility === 'contacts' ? "users" : "lock"} size={16} color={theme.textSecondary} />
+          <ThemedText type="body" style={{ color: theme.text, textTransform: 'capitalize' }}>
+            {globalVisibility === 'contacts' ? t("create_trip.tour_group", "Contacts") : globalVisibility}
           </ThemedText>
           <Feather name="chevron-down" size={16} color={theme.textSecondary} />
         </Pressable>

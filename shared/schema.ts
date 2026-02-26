@@ -17,6 +17,10 @@ export const users = pgTable("users", {
 export const trips = pgTable("trips", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   title: text("title").notNull(),
+  destination: text("destination"),
+  visibility: varchar("visibility", { length: 20 }).default("private").notNull(),
+  latitude: real("latitude"),
+  longitude: real("longitude"),
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
   totalBudget: real("total_budget").default(0).notNull(),

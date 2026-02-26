@@ -19,6 +19,10 @@ export interface TripDestination {
 export interface Trip {
   id: string;
   title: string;
+  destination?: string | null;
+  visibility: "public" | "contacts" | "private";
+  latitude?: number | null;
+  longitude?: number | null;
   destinations?: TripDestination[]; // New dynamically mapped destinations array
   startDate: string;
   endDate: string;
