@@ -21,6 +21,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { useStore } from "@/store/useStore";
+import { apiRequest } from "@/lib/query-client";
 import { Spacing, Colors } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import type { Itinerary, ItineraryDay, Activity } from "@/types";
@@ -255,21 +256,40 @@ export default function GenerateItineraryScreen() {
     rotation.value = withRepeat(withTiming(360, { duration: 2000 }), -1, false);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      const response = await apiRequest("POST", `/api/trips/${currentTrip.id}/generate`, {
+        interests: ["culture", "food", "sightseeing"], // Defaults, can be pulled from preferences later
+        pace: "moderate"
+      });
+      const data = await response.json();
 
-      const startDate = new Date(currentTrip.startDate);
-      const endDate = new Date(currentTrip.endDate);
-      const days = Math.ceil(
-        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
-      );
+      // Transform the pure Gemini JSON into our Zustand Store format
+      const fetchedItinerary: Itinerary = {
+        id: `itinerary-${Date.now()}`,
+        tripId: currentTrip.id,
+        version: 1,
+        days: data.itinerary?.days?.map((d: any, index: number) => ({
+          id: `day-${index + 1}`,
+          dayNumber: d.day_index || index + 1,
+          date: d.date || new Date().toISOString(),
+          theme: `Day ${index + 1} - Recommended`,
+          activities: d.activities?.map((a: any, aIndex: number) => ({
+            id: `act-${index}-${aIndex}`,
+            dayId: `day-${index + 1}`,
+            order: aIndex + 1,
+            timeStart: a.startTime || "09:00",
+            timeEnd: a.endTime,
+            title: a.title || "Activity",
+            description: a.description,
+            estimatedCost: a.estimatedCost || 0,
+            category: "activity",
+            status: "planned",
+            duration: 60
+          })) || []
+        })) || [],
+        createdAt: new Date().toISOString()
+      };
 
-      const itinerary = generateMockItinerary(
-        currentTrip.id,
-        currentTrip.startDate,
-        days
-      );
-
-      setCurrentItinerary(itinerary);
+      setCurrentItinerary(fetchedItinerary);
       setIsComplete(true);
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -278,6 +298,7 @@ export default function GenerateItineraryScreen() {
         navigation.replace("Itinerary", { tripId: currentTrip.id });
       }, 1500);
     } catch (error) {
+      console.error("Gemini Generation Error:", error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setIsGenerating(false);
     }
