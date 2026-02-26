@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import Constants from "expo-constants";
 
 /**
  * Gets the base URL for the Express API server (e.g., "http://localhost:3000")
@@ -15,7 +16,14 @@ export function getApiUrl(): string {
     return `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
   }
 
-  // Fallback to localhost if running strictly locally
+  // Dynamic Physical Device Routing -> Maps Expo bundler IP to Backend API port 5000
+  const hostUri = Constants.expoConfig?.hostUri;
+  if (hostUri) {
+    const ip = hostUri.split(":")[0];
+    return `http://${ip}:5000`;
+  }
+
+  // Fallback to localhost if running strictly locally (e.g. Web or iOS Simulator)
   return "http://localhost:5000";
 }
 
