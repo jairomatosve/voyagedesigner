@@ -4,7 +4,7 @@ import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
-import { Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
@@ -169,9 +169,76 @@ export default function TripDetailScreen() {
           </View>
         </Animated.View>
 
+        {/* --- HUB BUCKETS (RESERVATIONS & ARCHIVES) --- */}
+        <Animated.View entering={FadeInDown.delay(350).duration(400)} style={styles.hubContainer}>
+          <ThemedText type="h4" style={styles.sectionTitle}>
+            {t("trip_detail.reservations_title", "Reservations & Attachments")}
+          </ThemedText>
+          <View style={[styles.hubBucketsGrid, { backgroundColor: theme.backgroundTertiary }]}>
+            <Pressable style={styles.hubBucket}>
+              <View style={styles.bucketIconWrap}>
+                <Feather name="navigation" size={20} color={theme.text} />
+              </View>
+              <ThemedText type="caption" style={{ color: theme.textSecondary, marginTop: 4 }}>
+                {t("hub.flights", "Flights")}
+              </ThemedText>
+            </Pressable>
+
+            <Pressable style={styles.hubBucket}>
+              <View style={styles.bucketIconWrap}>
+                <Feather name="home" size={20} color={theme.text} />
+              </View>
+              <ThemedText type="caption" style={{ color: theme.textSecondary, marginTop: 4 }}>
+                {t("hub.lodging", "Lodging")}
+              </ThemedText>
+            </Pressable>
+
+            <Pressable style={styles.hubBucket}>
+              <View style={styles.bucketIconWrap}>
+                <Ionicons name="car-outline" size={22} color={theme.text} />
+              </View>
+              <ThemedText type="caption" style={{ color: theme.textSecondary, marginTop: 4 }}>
+                {t("hub.cars", "Rental")}
+              </ThemedText>
+            </Pressable>
+
+            <Pressable style={styles.hubBucket}>
+              <View style={styles.bucketIconWrap}>
+                <Ionicons name="restaurant-outline" size={20} color={theme.text} />
+              </View>
+              <ThemedText type="caption" style={{ color: theme.textSecondary, marginTop: 4 }}>
+                {t("hub.dining", "Dining")}
+              </ThemedText>
+            </Pressable>
+
+            <View style={styles.hubDivider} />
+
+            <Pressable style={styles.hubBucket}>
+              <View style={styles.bucketIconWrap}>
+                <Feather name="paperclip" size={20} color={theme.textSecondary} />
+                <View style={[styles.badge, { backgroundColor: Colors.warning }]}><ThemedText style={{ fontSize: 10, color: '#fff', fontWeight: 'bold' }}>*</ThemedText></View>
+              </View>
+              <ThemedText type="caption" style={{ color: theme.textSecondary, marginTop: 4 }}>
+                {t("hub.files", "Files")}
+              </ThemedText>
+            </Pressable>
+
+          </View>
+        </Animated.View>
+
+        {/* --- NOTES BUCKET --- */}
         <Animated.View entering={FadeInDown.delay(400).duration(400)}>
-          <ThemedText type="h3" style={styles.sectionTitle}>
-            {t("trip_detail.quick_actions")}
+          <View style={[styles.notesBucket, { backgroundColor: theme.backgroundTertiary, borderColor: theme.border }]}>
+            <Feather name="edit-3" size={16} color={theme.textSecondary} />
+            <ThemedText type="body" style={{ color: theme.textSecondary, marginLeft: Spacing.sm }}>
+              {t("hub.notes_placeholder", "Writte or paste anything here: transport info, tips, or tricks...")}
+            </ThemedText>
+          </View>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(500).duration(400)}>
+          <ThemedText type="h3" style={[styles.sectionTitle, { marginTop: Spacing.xl }]}>
+            {t("trip_detail.ai_planner", "AI Adaptive Planner")}
           </ThemedText>
 
           <View style={styles.actionsGrid}>
@@ -198,31 +265,18 @@ export default function TripDetailScreen() {
             </Pressable>
 
             <Pressable
-              onPress={handleViewBudget}
+              onPress={handleDeleteTrip}
               style={[
                 styles.actionCard,
-                { backgroundColor: Colors.success },
-                Shadows.card,
+                { backgroundColor: theme.backgroundTertiary, borderWidth: 1, borderColor: theme.border },
               ]}
             >
-              <Feather name="pie-chart" size={28} color="#FFFFFF" />
-              <ThemedText type="h4" style={styles.actionText}>
-                {t("trip_detail.view_budget")}
+              <Feather name="trash-2" size={24} color={Colors.error} />
+              <ThemedText type="body" style={{ color: Colors.error, marginTop: Spacing.sm, fontWeight: 'bold' }}>
+                {t("trip_detail.delete_trip")}
               </ThemedText>
             </Pressable>
           </View>
-        </Animated.View>
-
-        <Animated.View entering={FadeInDown.delay(500).duration(400)}>
-          <Button
-            onPress={handleDeleteTrip}
-            variant="ghost"
-            style={styles.deleteButton}
-          >
-            <ThemedText type="body" style={{ color: Colors.error }}>
-              {t("trip_detail.delete_trip")}
-            </ThemedText>
-          </Button>
         </Animated.View>
       </View>
     </ScrollView>
@@ -301,4 +355,54 @@ const styles = StyleSheet.create({
   deleteButton: {
     marginTop: Spacing.xl,
   },
+  hubContainer: {
+    marginTop: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  hubBucketsGrid: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    marginTop: Spacing.sm,
+  },
+  hubBucket: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 60,
+  },
+  bucketIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "transparent",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  hubDivider: {
+    width: 1,
+    height: '60%',
+    backgroundColor: '#8E8E93',
+    opacity: 0.2,
+  },
+  badge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notesBucket: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    marginTop: Spacing.sm,
+  }
 });
