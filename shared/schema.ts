@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, uuid, integer, real, serial } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, uuid, integer, real, serial, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -85,6 +85,34 @@ export const expenses = pgTable("expenses", {
   date: timestamp("date").defaultNow().notNull(),
 });
 
+// Trip Reservations (Hard blocks: Flights, Hotels, Cars)
+export const tripReservations = pgTable("trip_reservations", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  tripId: uuid("trip_id").references(() => trips.id).notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // flight, lodging, car, dining, other
+  title: text("title").notNull(), // e.g. "Flight AC 1606 to YYZ"
+  provider: text("provider"), // e.g. "Air Canada", "Fairmont"
+  confirmationNumber: text("confirmation_number"),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time").notNull(),
+  cost: real("cost").default(0),
+  currency: varchar("currency", { length: 3 }).default("USD"),
+  isFirmAnchor: boolean("is_firm_anchor").default(true).notNull(), // True = AI cannot move this
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Trip Attachments (Files, PDFs)
+export const tripAttachments = pgTable("trip_attachments", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  tripId: uuid("trip_id").references(() => trips.id).notNull(),
+  reservationId: uuid("reservation_id").references(() => tripReservations.id), // Optional link to a specific reservation
+  fileUrl: text("file_url").notNull(), // Supabase Storage URL
+  fileName: text("file_name").notNull(),
+  fileType: varchar("file_type", { length: 50 }), // pdf, image, etc.
+  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
+});
+
 // Zod Schemas for validation
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
@@ -109,3 +137,9 @@ export type Activity = typeof activities.$inferSelect;
 
 export const insertExpenseSchema = createInsertSchema(expenses);
 export type Expense = typeof expenses.$inferSelect;
+
+export const insertTripReservationSchema = createInsertSchema(tripReservations);
+export type TripReservation = typeof tripReservations.$inferSelect;
+
+export const insertTripAttachmentSchema = createInsertSchema(tripAttachments);
+export type TripAttachment = typeof tripAttachments.$inferSelect;
