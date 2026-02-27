@@ -16,13 +16,6 @@ export function getApiUrl(): string {
     return `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
   }
 
-  // Dynamic Physical Device Routing -> Maps Expo bundler IP to Backend API port 5000
-  const hostUri = Constants.expoConfig?.hostUri;
-  if (hostUri) {
-    const ip = hostUri.split(":")[0];
-    return `http://${ip}:5000`;
-  }
-
   // Fallback to localhost if running strictly locally (e.g. Web or iOS Simulator)
   return "http://localhost:5000";
 }
